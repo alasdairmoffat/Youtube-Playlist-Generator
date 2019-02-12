@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Youtube Playlist Generator</title>
+    <script src="./ui.js"></script>
+    <script src="./popup.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="main-screen">
+      <div id="sign-in-buttons">
+        <button id="login-button" style="display: none">Sign In</button>
+        <button id="logout-button" style="display: none">Sign Out</button>
+      </div>
+      <div id="num-videos"></div>
+      <button id="quick-playlists-button">Quick Playlists</button>
+    </div>
+    <div id="quick-playlists" style="display: none">
+      <button id="back-button">Back</button>
+      <div id="quick-playlists-list"></div>
+    </div>
+  </body>
+</html>
