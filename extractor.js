@@ -11,9 +11,9 @@
     embed: 'src',
   };
 
-  // Create RegEx to correctly extract video ID from any type of youtube URL.
+  // added extra element to RegEx for search results on youtube.com
   // eslint-disable-next-line no-useless-escape
-  const re = /[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
+  const re = /(?:[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])|(?:\/watch\?v=))(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
 
   // create NodeList with all requested types maintaining page order
   const allLinks = document.querySelectorAll('a, iframe, embed, object');
