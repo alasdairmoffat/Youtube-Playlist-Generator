@@ -18,12 +18,17 @@ class UI {
     this.quickPlaylistsButton = document.querySelector('#quick-playlists-button');
     this.backButton = document.querySelector('#back-button');
 
+    this.addToTestList = document.querySelector('#add-to-test-list');
+
     if (methods) {
       if (methods.login) {
         this.loginButton.onclick = methods.login;
       }
       if (methods.logout) {
         this.logoutButton.onclick = methods.logout;
+      }
+      if (methods.addToTestList) {
+        this.addToTestList.onclick = methods.addToTestList;
       }
     }
 

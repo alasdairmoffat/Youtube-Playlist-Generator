@@ -13,9 +13,16 @@ window.onload = () => {
     });
   }
 
+  function addToTestList() {
+    port.postMessage({
+      type: 'addToTestList',
+    });
+  }
+
   const uiMethods = {
     login,
     logout,
+    addToTestList,
   };
 
   // eslint-disable-next-line no-undef

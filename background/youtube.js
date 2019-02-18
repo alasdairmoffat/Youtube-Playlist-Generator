@@ -12,79 +12,138 @@ class Youtube {
     return !!this.token;
   }
 
-  login(props) {
-    /*
-    props should be object of form
-    {
-      interactive: bool,
-      callback: function,
-    }
-    */
-    const { interactive } = props;
-    chrome.identity.getAuthToken({ interactive }, (token) => {
-      if (chrome.runtime.lastError) {
-        console.log(chrome.runtime.lastError);
-      } else {
-        this.token = token;
-        console.log('logged in');
-      }
-
-      if (props.callback) {
-        props.callback(this.isSignedIn());
-      }
+  login(interactive) {
+    return new Promise((resolve) => {
+      chrome.identity.getAuthToken({ interactive }, (token) => {
+        if (chrome.runtime.lastError) {
+          console.log(chrome.runtime.lastError);
+        } else {
+          this.token = token;
+          console.log('logged in');
+          resolve();
+        }
+      });
     });
   }
 
   // should this just reference this.token rather than calling chrome.identity?
-  logout(props) {
-    /*
-    props should be object of form
-    {
-      callback: function,
-    }
-    */
-    chrome.identity.getAuthToken({ interactive: false }, (token) => {
-      if (!chrome.runtime.lastError) {
-        chrome.identity.removeCachedAuthToken({ token }, () => {
-          this.token = null;
-          console.log('logged out');
-
-          if (props.callback) {
-            props.callback(this.isSignedIn());
-          }
-        });
-      }
+  logout() {
+    return new Promise((resolve) => {
+      chrome.identity.getAuthToken({ interactive: false }, (token) => {
+        if (!chrome.runtime.lastError) {
+          chrome.identity.removeCachedAuthToken({ token }, () => {
+            this.token = null;
+            console.log('logged out');
+            resolve();
+          });
+        }
+      });
     });
   }
 
-  createURL(url, params) {
-    const paramArr = [];
-
-    Object.keys(params).forEach((x) => {
+  createURL(resource, params) {
+    const paramArr = Object.keys(params).map((x) => {
       const param = params[x].replace(/,/g, '%2C');
-      paramArr.push(`${x}=${param}&`);
+      return `${x}=${param}&`;
     });
 
-    return `${url}?${paramArr.join('')}key=${this.apiKey}`;
+    return `https://www.googleapis.com/youtube/v3/${resource}?${paramArr.join('')}key=${
+      this.apiKey
+    }`;
+  }
+
+  async sendApiResponse(resource, params, options) {
+    const url = this.createURL(resource, params);
+
+    const request = { ...options };
+
+    request.headers = {
+      Authorization: `Bearer ${this.token}`,
+    };
+
+    if (options.method === 'POST') {
+      request.headers['Content-Type'] = 'application/json';
+    }
+
+    if (request.body) {
+      request.body = JSON.stringify(request.body);
+    }
+
+    const response = await fetch(url, request);
+
+    return response.json();
   }
 
   async getPlaylists() {
-    const url = this.createURL('https://www.googleapis.com/youtube/v3/playlists', {
+    const resource = 'playlists';
+
+    const params = {
       part: 'snippet',
       maxResults: '25',
       mine: 'true',
-    });
+    };
 
-    const response = await fetch(url, {
+    const options = {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-      },
-    });
+    };
 
-    const data = await response.json();
+    const data = await this.sendApiResponse(resource, params, options);
 
     console.log(data);
+  }
+
+  async createPlaylist(title) {
+    const resource = 'playlists';
+
+    const params = {
+      part: 'snippet',
+    };
+
+    const options = {
+      method: 'POST',
+      body: {
+        snippet: {
+          title,
+        },
+      },
+    };
+
+    const data = await this.sendApiResponse(resource, params, options);
+
+    console.log(data);
+  }
+
+  async addVideo(playlistId, videoId) {
+    const resource = 'playlistItems';
+
+    const params = {
+      part: 'snippet',
+    };
+
+    const options = {
+      method: 'POST',
+      body: {
+        snippet: {
+          playlistId,
+          resourceId: {
+            kind: 'youtube#video',
+            videoId,
+          },
+        },
+      },
+    };
+
+    const data = await this.sendApiResponse(resource, params, options);
+
+    console.log(data);
+  }
+
+  async addToTestList() {
+    const playlistId = 'PLXqaL3R-110qV1MIxyKYEZBzIQCW4VgsC';
+    const { videoIds } = this;
+    for (let i = 0; i < videoIds.length; i += 1) {
+      await this.addVideo(playlistId, videoIds[i]);
+    }
   }
 
   static async createQuickPlaylists(videoIds) {

@@ -8,6 +8,7 @@ chrome.extension.onMessage.addListener(async (msg) => {
   switch (msg.type) {
     case 'videoIds':
       if (msg.videoIds.length > 0) {
+        youtube.videoIds = msg.videoIds;
         const quickPlaylists = await Youtube.createQuickPlaylists(msg.videoIds);
         chrome.extension.sendMessage({
           type: 'quickPlaylists',
@@ -35,19 +36,15 @@ chrome.extension.onConnect.addListener((port) => {
   portToPopup.onMessage.addListener(async (msg) => {
     switch (msg.type) {
       case 'login':
-        await youtube.login({
-          interactive: true,
-          callback: () => {
-            sendStatus(port);
-          },
-        });
+        await youtube.login(true);
+        sendStatus(port);
         break;
       case 'logout':
-        await youtube.logout({
-          callback: () => {
-            sendStatus(port);
-          },
-        });
+        await youtube.logout();
+        sendStatus(port);
+        break;
+      case 'addToTestList':
+        youtube.addToTestList();
         break;
       default:
     }

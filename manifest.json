@@ -1,7 +1,7 @@
 {
   "name": "Youtube Playlist Generator",
   "description": "Create Youtube Playlist from all linked videos in a page.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "manifest_version": 2,
   "permissions": ["activeTab", "tabs", "https://www.youtube.com/", "identity"],
   "browser_action": {
