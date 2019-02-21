@@ -13,20 +13,40 @@ window.onload = () => {
     });
   }
 
-  function addToTestList() {
+  function getChannelPlaylists() {
     port.postMessage({
-      type: 'addToTestList',
+      type: 'getChannelPlaylists',
+    });
+    this.onclick = () => {};
+  }
+
+  function createPlaylist(title) {
+    port.postMessage({
+      type: 'createPlaylist',
+      body: {
+        title,
+      },
     });
   }
 
-  const uiMethods = {
+  const buttonFunctions = {
     login,
     logout,
-    addToTestList,
+    getChannelPlaylists,
+    createPlaylist,
   };
 
   // eslint-disable-next-line no-undef
-  const ui = new UI(uiMethods);
+  const ui = new UI(buttonFunctions);
+
+  function addToPlaylist(playlistId) {
+    port.postMessage({
+      type: 'addToPlaylist',
+      body: { playlistId },
+    });
+    // Add button to open playlist on completion?
+    // https://www.youtube.com/playlist?list=${playlistId}&disable_polymer=true
+  }
 
   port.onMessage.addListener((msg) => {
     console.log(msg);
@@ -35,24 +55,25 @@ window.onload = () => {
         ui.updateStatus(msg.body);
         break;
 
-      default:
-    }
-  });
-
-  chrome.extension.onMessage.addListener((msg) => {
-    switch (msg.type) {
-      case 'videoIds':
-        ui.updateVideoCount(msg.videoIds.length);
-        break;
-
       case 'quickPlaylists':
-        ui.addQuickPlaylists(msg.quickPlaylists);
+        ui.showQuickPlaylists(msg.body.quickPlaylists);
+        break;
+
+      case 'channelPlaylists':
+        ui.showChannelPlaylists(msg.body.channelPlaylists, addToPlaylist);
         break;
 
       default:
-        break;
     }
   });
 
-  chrome.tabs.executeScript({ file: './extractor.js' });
+  chrome.tabs.executeScript({ file: './extractor.js', allFrames: true }, (returnArray) => {
+    const videoIds = Array.from(new Set(returnArray.flat()));
+
+    ui.updateVideoCount(videoIds.length);
+    port.postMessage({
+      type: 'videoIds',
+      body: { videoIds },
+    });
+  });
 };

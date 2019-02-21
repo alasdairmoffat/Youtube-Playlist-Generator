@@ -15,14 +15,39 @@
         <button id="login-button" style="display: none">Sign In</button>
         <button id="logout-button" style="display: none">Sign Out</button>
       </div>
+
       <div id="num-videos"></div>
-      <button id="quick-playlists-button">Quick Playlists</button>
+
+      <div id="playlists-container" style="display: none">
+        <button id="quick-playlists-button">Quick Playlists</button>
+
+        <div id="channel-playlists-container">
+          <div id="not-busy-container" style="display: none">
+            <button id="add-to-playlist-button">Add To Playlist</button>
+            <div id="channel-playlists" style="display: none">
+              <ul id="channel-playlists-list"></ul>
+              <button id="new-playlist-button">
+                Create new playlist
+              </button>
+              <form
+                action=""
+                id="create-new-playlist-form"
+                style="display: none"
+              >
+                <input type="text" maxLength="150" />
+                <button type="submit">Create</button>
+              </form>
+            </div>
+          </div>
+
+          <div id="busy-container" style="display: none"></div>
+        </div>
+      </div>
     </div>
+
     <div id="quick-playlists" style="display: none">
       <button id="back-button">Back</button>
       <div id="quick-playlists-list"></div>
     </div>
-
-    <button id="add-to-test-list">Add to Test List</button>
   </body>
 </html>

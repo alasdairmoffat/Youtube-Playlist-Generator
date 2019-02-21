@@ -4,12 +4,26 @@ class Youtube {
     this.apiKey = apiKey;
     // should this be stored or just requested each time?
     this.token = null;
+    // this.busy is either false or {current: number, total: number}
+    this.busy = false;
 
     this.login(false);
   }
 
   isSignedIn() {
     return !!this.token;
+  }
+
+  isBusy() {
+    return this.busy;
+  }
+
+  setBusy(busy) {
+    if (busy && !(busy.current && busy.total)) {
+      console.log('incorrect parameters for setBusy');
+    } else {
+      this.busy = busy;
+    }
   }
 
   login(interactive) {
@@ -46,17 +60,14 @@ class Youtube {
       const param = params[x].replace(/,/g, '%2C');
       return `${x}=${param}&`;
     });
-
     return `https://www.googleapis.com/youtube/v3/${resource}?${paramArr.join('')}key=${
       this.apiKey
     }`;
   }
 
-  async sendApiResponse(resource, params, options) {
+  async sendApiRequest(resource, params, options) {
     const url = this.createURL(resource, params);
-
     const request = { ...options };
-
     request.headers = {
       Authorization: `Bearer ${this.token}`,
     };
@@ -64,41 +75,39 @@ class Youtube {
     if (options.method === 'POST') {
       request.headers['Content-Type'] = 'application/json';
     }
-
     if (request.body) {
       request.body = JSON.stringify(request.body);
     }
 
     const response = await fetch(url, request);
-
     return response.json();
   }
 
-  async getPlaylists() {
+  async getChannelPlaylists() {
     const resource = 'playlists';
-
     const params = {
       part: 'snippet',
       maxResults: '25',
       mine: 'true',
     };
-
     const options = {
       method: 'GET',
     };
-
-    const data = await this.sendApiResponse(resource, params, options);
-
-    console.log(data);
+    console.log('Fetching playlists');
+    const data = await this.sendApiRequest(resource, params, options);
+    console.log('Playlists Received');
+    const playlists = data.items.map(playlist => ({
+      title: playlist.snippet.title,
+      id: playlist.id,
+    }));
+    return playlists;
   }
 
   async createPlaylist(title) {
     const resource = 'playlists';
-
     const params = {
       part: 'snippet',
     };
-
     const options = {
       method: 'POST',
       body: {
@@ -107,19 +116,22 @@ class Youtube {
         },
       },
     };
+    console.log('Creating Playlist');
+    const data = await this.sendApiRequest(resource, params, options);
+    const playlistTitle = data.snippet.title;
+    const playlistId = data.id;
+    console.log(`Created playlist:
+      title: ${playlistTitle},
+      id: ${playlistId}`);
 
-    const data = await this.sendApiResponse(resource, params, options);
-
-    console.log(data);
+    return data;
   }
 
   async addVideo(playlistId, videoId) {
     const resource = 'playlistItems';
-
     const params = {
       part: 'snippet',
     };
-
     const options = {
       method: 'POST',
       body: {
@@ -132,57 +144,65 @@ class Youtube {
         },
       },
     };
-
-    const data = await this.sendApiResponse(resource, params, options);
-
-    console.log(data);
+    const data = await this.sendApiRequest(resource, params, options);
+    return data;
   }
 
-  async addToTestList() {
-    const playlistId = 'PLXqaL3R-110qV1MIxyKYEZBzIQCW4VgsC';
-    const { videoIds } = this;
-    for (let i = 0; i < videoIds.length; i += 1) {
-      await this.addVideo(playlistId, videoIds[i]);
-    }
+  async getPlaylistItems(playlistId) {
+    const resource = 'playlistItems';
+    const params = {
+      part: 'snippet',
+      maxResults: '50',
+      playlistId,
+    };
+    const options = {
+      method: 'GET',
+    };
+    return this.sendApiRequest(resource, params, options);
+  }
+
+  async avoidDuplicateVideos(playlistId, videoIds) {
+    const data = await this.getPlaylistItems(playlistId);
+
+    const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
+
+    return videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
   }
 
   static async createQuickPlaylists(videoIds) {
-    const re = /"playlistId":"((?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,})"/;
-
     const maxPlaylistLength = 50;
-
-    const requestUrls = [];
     const numberOfLists = Math.ceil(videoIds.length / maxPlaylistLength);
 
-    for (let i = 0; i < numberOfLists; i += 1) {
-      const playlistVideoIds = videoIds.slice(i * maxPlaylistLength, (i + 1) * maxPlaylistLength);
-      const { length } = playlistVideoIds;
+    // prettier-ignore
+    const playlistVideoIds = Array.from(
+      Array(numberOfLists),
+      (x, i) => videoIds.slice(i * maxPlaylistLength, (i + 1) * maxPlaylistLength),
+    );
 
-      const videoIdList = playlistVideoIds.join(',');
-
-      requestUrls.push({
+    const requestUrls = playlistVideoIds.reduce((result, element) => {
+      const videoIdList = element.join(',');
+      const { length } = element;
+      result.push({
         url: `https://www.youtube.com/watch_videos?video_ids=${videoIdList}`,
         length,
       });
-    }
+      return result;
+    }, []);
 
+    const re = /"playlistId":"((?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,})"/;
     const quickPlaylists = await Promise.all(
       requestUrls.map(async (request) => {
         const response = await fetch(request.url);
         const text = await response.text();
-        const playlistId = re.exec(text)[1];
-
+        const playlistId = text.match(re)[1];
         const { length } = request;
-
         const playlist = {
           url: `https://www.youtube.com/playlist?list=${playlistId}&disable_polymer=true`,
           length,
         };
-
         return playlist;
       }),
     );
-
     // returns a promise
     return quickPlaylists;
   }

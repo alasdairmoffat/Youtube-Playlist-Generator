@@ -1,34 +1,50 @@
 // eslint-disable-next-line no-unused-vars
 class UI {
-  constructor(methods) {
+  constructor(buttonFunctions) {
     /*
     methods sould be object of form
     {
       login: function,
       logout: function,
+      getPlaylists: function,
+      createPlaylist: function,
     }
     */
     this.mainScreen = document.querySelector('#main-screen');
     this.numVideos = document.querySelector('#num-videos');
     this.quickPlaylists = document.querySelector('#quick-playlists');
     this.quickPlaylistsList = document.querySelector('#quick-playlists-list');
+    this.channelPlaylistsContainer = document.querySelector('#channel-playlists-container');
+    this.channelPlaylists = document.querySelector('#channel-playlists');
+    this.channelPlaylistsList = document.querySelector('#channel-playlists-list');
+    this.busyContainer = document.querySelector('#busy-container');
+    this.notbusyContainer = document.querySelector('#not-busy-container');
+    this.playlistsContainer = document.querySelector('#playlists-container');
 
     this.loginButton = document.querySelector('#login-button');
     this.logoutButton = document.querySelector('#logout-button');
     this.quickPlaylistsButton = document.querySelector('#quick-playlists-button');
     this.backButton = document.querySelector('#back-button');
+    this.addToPlaylistButton = document.querySelector('#add-to-playlist-button');
+    this.newPlaylistButton = document.querySelector('#new-playlist-button');
+    this.createNewPlaylistForm = document.querySelector('#create-new-playlist-form');
 
-    this.addToTestList = document.querySelector('#add-to-test-list');
-
-    if (methods) {
-      if (methods.login) {
-        this.loginButton.onclick = methods.login;
+    if (buttonFunctions) {
+      if (buttonFunctions.login) {
+        this.loginButton.onclick = buttonFunctions.login;
       }
-      if (methods.logout) {
-        this.logoutButton.onclick = methods.logout;
+      if (buttonFunctions.logout) {
+        this.logoutButton.onclick = buttonFunctions.logout;
       }
-      if (methods.addToTestList) {
-        this.addToTestList.onclick = methods.addToTestList;
+      if (buttonFunctions.getChannelPlaylists) {
+        this.addToPlaylistButton.onclick = buttonFunctions.getChannelPlaylists;
+      }
+      if (buttonFunctions.createPlaylist) {
+        this.createNewPlaylistForm.onsubmit = (event) => {
+          event.preventDefault();
+          const playlistTitle = event.target.querySelector('input').value;
+          buttonFunctions.createPlaylist(playlistTitle);
+        };
       }
     }
 
@@ -41,6 +57,11 @@ class UI {
       this.mainScreen.style.display = 'block';
       this.quickPlaylists.style.display = 'none';
     };
+
+    this.newPlaylistButton.onclick = () => {
+      this.newPlaylistButton.style.display = 'none';
+      this.createNewPlaylistForm.style.display = 'block';
+    };
   }
 
   updateStatus(status) {
@@ -48,18 +69,56 @@ class UI {
       if (status.isSignedIn) {
         this.loginButton.style.display = 'none';
         this.logoutButton.style.display = 'block';
+        this.channelPlaylistsContainer.style.display = 'block';
       } else {
         this.loginButton.style.display = 'block';
         this.logoutButton.style.display = 'none';
+        this.channelPlaylistsContainer.style.display = 'none';
+      }
+
+      if (status.busy) {
+        this.busyContainer.style.display = 'block';
+        this.notbusyContainer.style.display = 'none';
+
+        const { current, total } = status.busy;
+        this.busyContainer.innerText = `Adding ${current} of ${total}`;
+      } else if (status.complete) {
+        this.busyContainer.innerText = 'All videos added';
+        this.busyContainer.style.display = 'block';
+        this.notbusyContainer.style.display = 'none';
+      } else {
+        this.busyContainer.style.display = 'none';
+        this.notbusyContainer.style.display = 'block';
       }
     }
   }
 
   updateVideoCount(numVideos) {
-    this.numVideos.innerText = `${numVideos} videos found`;
+    if (numVideos === 0) {
+      this.numVideos.innerText = 'No videos found';
+      this.playlistsContainer.style.display = 'none';
+    } else {
+      this.numVideos.innerText = `${numVideos} video${numVideos === 1 ? '' : 's'} found`;
+      this.playlistsContainer.style.display = 'block';
+    }
   }
 
-  addQuickPlaylists(quickPlaylists) {
+  showChannelPlaylists(channelPlaylists, onclick) {
+    channelPlaylists.forEach((playlist) => {
+      const li = document.createElement('li');
+      li.innerText = playlist.title;
+      li.playlistId = playlist.id;
+      li.onclick = (event) => {
+        onclick(event.target.playlistId);
+      };
+      this.channelPlaylistsList.append(li);
+    });
+
+    this.addToPlaylistButton.style.display = 'none';
+    this.channelPlaylists.style.display = 'block';
+  }
+
+  showQuickPlaylists(quickPlaylists) {
     quickPlaylists.forEach((playlist, index) => {
       const { url, length } = playlist;
 

@@ -1,52 +1,130 @@
-const apiKey = 'AIzaSyDXAncnFBw3u0AcMo_Ikp-E-wwevie5nyY';
-
-const youtube = new Youtube(apiKey);
-
-let portToPopup;
-
-chrome.extension.onMessage.addListener(async (msg) => {
-  switch (msg.type) {
-    case 'videoIds':
-      if (msg.videoIds.length > 0) {
-        youtube.videoIds = msg.videoIds;
-        const quickPlaylists = await Youtube.createQuickPlaylists(msg.videoIds);
-        chrome.extension.sendMessage({
-          type: 'quickPlaylists',
-          quickPlaylists,
-        });
-      }
-      break;
-    default:
-      break;
+class MessageHandler {
+  constructor(youtube) {
+    this.port = null;
+    this.youtube = youtube;
   }
-});
 
-function sendStatus(port) {
-  const isSignedIn = youtube.isSignedIn();
-  port.postMessage({
-    type: 'status',
-    body: { isSignedIn },
-  });
-}
+  updatePort(port) {
+    this.port = port;
+    this.port.onDisconnect.addListener(() => {
+      this.port = null;
+    });
+    this.sendStatus();
+    this.port.onMessage.addListener(this.messageListener.bind(this));
+    chrome.extension.onMessage.addListener(this.receiveVideoIds.bind(this));
+  }
 
-chrome.extension.onConnect.addListener((port) => {
-  portToPopup = port;
-  sendStatus(port);
+  sendMessage(msg) {
+    if (!this.port) {
+      console.log('port disconnected');
+    } else {
+      try {
+        this.port.postMessage(msg);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
 
-  portToPopup.onMessage.addListener(async (msg) => {
+  sendStatus(complete = false) {
+    const isSignedIn = this.youtube.isSignedIn();
+    const busy = this.youtube.isBusy();
+    const body = {
+      isSignedIn,
+      busy,
+    };
+    if (complete) {
+      body.complete = true;
+    }
+
+    this.sendMessage({
+      type: 'status',
+      body,
+    });
+  }
+
+  async sendChannelPlaylists() {
+    const channelPlaylists = await this.youtube.getChannelPlaylists();
+    this.sendMessage({
+      type: 'channelPlaylists',
+      body: { channelPlaylists },
+    });
+  }
+
+  async addAllVideos(playlistId) {
+    const videoIds = await this.youtube.avoidDuplicateVideos(playlistId, this.youtube.videoIds);
+    const numVideos = videoIds.length;
+
+    for (let i = 0; i < numVideos; i += 1) {
+      this.youtube.setBusy({ current: i + 1, total: numVideos });
+      this.sendStatus();
+      console.log(`Adding video ${i + 1} of ${numVideos}.`);
+
+      // eslint-disable-next-line no-await-in-loop
+      await this.youtube.addVideo(playlistId, videoIds[i]);
+    }
+
+    this.youtube.setBusy(false);
+    this.sendStatus(true);
+    console.log(`All video added to ${playlistId}`);
+  }
+
+  async createPlaylist(title) {
+    const data = await this.youtube.createPlaylist(title);
+    const playlistId = data.id;
+    this.addAllVideos(playlistId);
+  }
+
+  async receiveVideoIds(videoIds) {
+    if (videoIds.length > 0) {
+      this.youtube.videoIds = videoIds;
+      // eslint-disable-next-line no-undef
+      const quickPlaylists = await Youtube.createQuickPlaylists(videoIds);
+      this.sendMessage({
+        type: 'quickPlaylists',
+        body: { quickPlaylists },
+      });
+    }
+  }
+
+  async messageListener(msg) {
     switch (msg.type) {
+      case 'videoIds':
+        this.receiveVideoIds(msg.body.videoIds);
+        break;
+
       case 'login':
-        await youtube.login(true);
-        sendStatus(port);
+        await this.youtube.login(true);
+        this.sendStatus();
         break;
+
       case 'logout':
-        await youtube.logout();
-        sendStatus(port);
+        await this.youtube.logout();
+        this.sendStatus();
         break;
-      case 'addToTestList':
-        youtube.addToTestList();
+
+      case 'getChannelPlaylists':
+        this.sendChannelPlaylists();
         break;
+
+      case 'addToPlaylist':
+        this.addAllVideos(msg.body.playlistId);
+        break;
+
+      case 'createPlaylist':
+        this.createPlaylist(msg.body.title);
+        break;
+
       default:
     }
-  });
+  }
+}
+
+const apiKey = 'AIzaSyDXAncnFBw3u0AcMo_Ikp-E-wwevie5nyY';
+// eslint-disable-next-line no-undef
+const youtube = new Youtube(apiKey);
+const messageHandler = new MessageHandler(youtube);
+
+chrome.extension.onConnect.addListener((port) => {
+  messageHandler.updatePort(port);
 });
