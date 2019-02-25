@@ -1,26 +1,128 @@
-#login-button {
-  background-color: blue;
-  color: white;
+body {
+  width: 275px;
 }
 
-#logout-button {
-  background-color: red;
-  color: white;
-}
-
-ul {
-  padding: 0;
-  overflow: auto;
-  width: 150px;
-  max-height: 200px;
-}
-
-li {
-  list-style-type: none;
-  padding: 3px;
-}
-
-li:hover {
-  background-color: #ccc;
+.pointer {
   cursor: pointer;
+}
+
+.checkmark-blue[type='checkbox'].filled-in:not(:checked)
+  + span:not(.lever):after {
+  background-color: transparent;
+  border: 2px solid #9e9e9e;
+}
+
+.checkmark-blue[type='checkbox'].filled-in:checked + span:not(.lever):after {
+  border: 2px solid #2962ff;
+  background-color: #2962ff;
+}
+
+.checkmark-align[type='checkbox'].filled-in:not(:checked)
+  + span:not(.lever):after,
+.checkmark-align[type='checkbox'].filled-in:checked + span:not(.lever):after {
+  top: 50%;
+  margin-top: -10px;
+}
+
+.checkmark-align[type='checkbox'].filled-in + span:not(.lever):before,
+.checkmark-align[type='checkbox'].filled-in + span:not(.lever):after {
+  margin-top: 5px;
+}
+
+#busy-container {
+  border-radius: 2px;
+}
+
+#channel-playlists-list {
+  max-height: 200px;
+  overflow: auto;
+}
+
+#channel-playlists-list .row {
+  margin-bottom: 8px;
+}
+
+.material-icons.smaller {
+  font-size: 16px;
+}
+
+#num-videos {
+  cursor: default;
+}
+
+.row {
+  margin-bottom: 10px;
+}
+
+#sign-in-button,
+.hover-highlight {
+  padding: 10px;
+}
+
+.hover-highlight:hover {
+  background-color: #dcdcdc;
+}
+
+.grey-text {
+  color: #909090 !important;
+}
+
+#not-busy-container > div,
+#busy-container > div {
+  padding: 0px 10px;
+}
+
+#title-input {
+  margin-bottom: 0;
+}
+
+.input-message {
+  font-size: 12px;
+}
+
+.form-warning span,
+.form-warning label {
+  color: #ff0000;
+}
+
+.form-warning input {
+  border-bottom: 1px solid #ff0000;
+}
+
+.btn-inline,
+.btn-cancel {
+  border: none;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  background-color: transparent;
+  color: #065fd4;
+}
+.btn-inline:hover, .btn-cancel:hover {
+  cursor: pointer;
+  box-shadow: none;
+}
+.btn-inline:focus {
+  background-color: #e1e1e1;
+}
+.btn-cancel {
+  color: #3493db;
+}
+.btn-cancel:focus {
+  background-color: #474747;
+}
+
+/* Overwrite injected script */
+/* The following elements are placed by materialize at html level */
+/* injected script is overwriting them at body level */
+
+body {
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+}
+
+body {
+  font-family: Roboto, Noto, sans-serif;
+  font-size: 14px;
 }

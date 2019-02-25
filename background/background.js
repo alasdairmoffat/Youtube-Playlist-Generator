@@ -27,6 +27,7 @@ class MessageHandler {
   }
 
   sendStatus(complete = false) {
+    // complete should be object {cancelled: bool}
     const isSignedIn = this.youtube.isSignedIn();
     const busy = this.youtube.isBusy();
     const body = {
@@ -34,7 +35,7 @@ class MessageHandler {
       busy,
     };
     if (complete) {
-      body.complete = true;
+      body.complete = complete;
     }
 
     this.sendMessage({
@@ -51,11 +52,18 @@ class MessageHandler {
     });
   }
 
-  async addAllVideos(playlistId) {
-    const videoIds = await this.youtube.avoidDuplicateVideos(playlistId, this.youtube.videoIds);
+  async addAllVideos(playlistId, videoIds) {
+    this.youtube.cancel = false;
     const numVideos = videoIds.length;
 
     for (let i = 0; i < numVideos; i += 1) {
+      if (this.youtube.cancel) {
+        this.youtube.cancel = false;
+        this.youtube.setBusy(false);
+        this.sendStatus({ cancelled: true });
+        console.log('Process cancelled.');
+        return;
+      }
       this.youtube.setBusy({ current: i + 1, total: numVideos });
       this.sendStatus();
       console.log(`Adding video ${i + 1} of ${numVideos}.`);
@@ -65,14 +73,22 @@ class MessageHandler {
     }
 
     this.youtube.setBusy(false);
-    this.sendStatus(true);
-    console.log(`All video added to ${playlistId}`);
+    this.sendStatus({ cancelled: false });
+    console.log(`All videos added to ${playlistId}.`);
+  }
+
+  async addToChannelPlaylist(playlistId) {
+    const allVideoIds = [...this.youtube.videoIds];
+    const videoIds = await this.youtube.avoidDuplicateVideos(playlistId, allVideoIds);
+
+    this.addAllVideos(playlistId, videoIds);
   }
 
   async createPlaylist(title) {
     const data = await this.youtube.createPlaylist(title);
     const playlistId = data.id;
-    this.addAllVideos(playlistId);
+    const videoIds = [...this.youtube.videoIds];
+    this.addAllVideos(playlistId, videoIds);
   }
 
   async receiveVideoIds(videoIds) {
@@ -108,11 +124,15 @@ class MessageHandler {
         break;
 
       case 'addToPlaylist':
-        this.addAllVideos(msg.body.playlistId);
+        this.addToChannelPlaylist(msg.body.playlistId);
         break;
 
       case 'createPlaylist':
         this.createPlaylist(msg.body.title);
+        break;
+
+      case 'cancel':
+        this.youtube.cancel = true;
         break;
 
       default:

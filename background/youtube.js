@@ -6,6 +6,7 @@ class Youtube {
     this.token = null;
     // this.busy is either false or {current: number, total: number}
     this.busy = false;
+    this.cancel = false;
 
     this.login(false);
   }
@@ -31,6 +32,7 @@ class Youtube {
       chrome.identity.getAuthToken({ interactive }, (token) => {
         if (chrome.runtime.lastError) {
           console.log(chrome.runtime.lastError);
+          resolve();
         } else {
           this.token = token;
           console.log('logged in');
@@ -86,7 +88,7 @@ class Youtube {
   async getChannelPlaylists() {
     const resource = 'playlists';
     const params = {
-      part: 'snippet',
+      part: 'snippet, status',
       maxResults: '25',
       mine: 'true',
     };
@@ -99,6 +101,7 @@ class Youtube {
     const playlists = data.items.map(playlist => ({
       title: playlist.snippet.title,
       id: playlist.id,
+      privacy: playlist.status.privacyStatus,
     }));
     return playlists;
   }

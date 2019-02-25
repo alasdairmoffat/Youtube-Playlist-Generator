@@ -17,7 +17,6 @@ window.onload = () => {
     port.postMessage({
       type: 'getChannelPlaylists',
     });
-    this.onclick = () => {};
   }
 
   function createPlaylist(title) {
@@ -29,11 +28,18 @@ window.onload = () => {
     });
   }
 
+  function cancel() {
+    port.postMessage({
+      type: 'cancel',
+    });
+  }
+
   const buttonFunctions = {
     login,
     logout,
     getChannelPlaylists,
     createPlaylist,
+    cancel,
   };
 
   // eslint-disable-next-line no-undef
@@ -68,7 +74,7 @@ window.onload = () => {
   });
 
   chrome.tabs.executeScript({ file: './extractor.js', allFrames: true }, (returnArray) => {
-    const videoIds = Array.from(new Set(returnArray.flat()));
+    const videoIds = returnArray ? Array.from(new Set(returnArray.flat())) : [];
 
     ui.updateVideoCount(videoIds.length);
     port.postMessage({
