@@ -81,22 +81,36 @@ class Youtube {
       request.body = JSON.stringify(request.body);
     }
 
-    const response = await fetch(url, request);
-    return response.json();
+    try {
+      const response = await fetch(url, request);
+      const data = await response.json();
+      if (!response.ok) {
+        throw data.error;
+      }
+      return data;
+    } catch (error) {
+      console.log(`Error code: ${error.code}`);
+      console.log(`Message: ${error.message}`);
+    }
   }
 
-  async getChannelPlaylists() {
+  // pageToken is optional parameter
+  async getChannelPlaylists(pageToken) {
     const resource = 'playlists';
     const params = {
       part: 'snippet, status',
-      maxResults: '25',
+      maxResults: '50',
       mine: 'true',
     };
+    if (pageToken) {
+      params.pageToken = pageToken;
+    }
     const options = {
       method: 'GET',
     };
     console.log('Fetching playlists');
     const data = await this.sendApiRequest(resource, params, options);
+    console.log(data);
     console.log('Playlists Received');
     const playlists = data.items.map(playlist => ({
       title: playlist.snippet.title,
@@ -151,25 +165,54 @@ class Youtube {
     return data;
   }
 
-  async getPlaylistItems(playlistId) {
+  // pageToken is an optional parameter
+  async getPlaylistItems(playlistId, pageToken) {
     const resource = 'playlistItems';
     const params = {
       part: 'snippet',
       maxResults: '50',
       playlistId,
     };
+    if (pageToken) {
+      params.pageToken = pageToken;
+    }
     const options = {
       method: 'GET',
     };
     return this.sendApiRequest(resource, params, options);
   }
 
-  async avoidDuplicateVideos(playlistId, videoIds) {
-    const data = await this.getPlaylistItems(playlistId);
+  // async avoidDuplicateVideos(playlistId, videoIds) {
+  //   const data = await this.getPlaylistItems(playlistId);
+
+  //   const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
+
+  //   return videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+  // }
+
+  async avoidDuplicateVideos(playlistId, videoIds, pageToken) {
+    let data;
+    if (pageToken) {
+      data = await this.getPlaylistItems(playlistId, pageToken);
+    } else {
+      data = await this.getPlaylistItems(playlistId);
+    }
 
     const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
 
-    return videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+    let filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+
+    console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
+
+    if (data.nextPageToken) {
+      filteredVideoIds = this.avoidDuplicateVideos(
+        playlistId,
+        filteredVideoIds,
+        data.nextPageToken,
+      );
+    }
+
+    return filteredVideoIds;
   }
 
   static async createQuickPlaylists(videoIds) {

@@ -44,12 +44,28 @@ class MessageHandler {
     });
   }
 
-  async sendChannelPlaylists() {
-    const channelPlaylists = await this.youtube.getChannelPlaylists();
-    this.sendMessage({
-      type: 'channelPlaylists',
-      body: { channelPlaylists },
-    });
+  async sendChannelPlaylists(nextPageToken) {
+    let channelPlaylists;
+    if (nextPageToken) {
+      channelPlaylists = await this.youtube.getChannelPlaylists(nextPageToken);
+      this.sendMessage({
+        type: 'channelPlaylists',
+        body: {
+          channelPlaylists,
+          incomplete: true,
+        },
+      });
+    } else {
+      channelPlaylists = await this.youtube.getChannelPlaylists();
+      this.sendMessage({
+        type: 'channelPlaylists',
+        body: { channelPlaylists },
+      });
+    }
+    if (channelPlaylists.nextPageToken) {
+      // sendChannelPlaylists(channelPlaylists.nextPageToken);
+      console.log(channelPlaylists.nextPageToken)
+    }
   }
 
   async addAllVideos(playlistId, videoIds) {
