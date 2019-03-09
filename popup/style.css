@@ -29,7 +29,7 @@ body {
   margin-top: 5px;
 }
 
-#busy-container {
+#message-container {
   border-radius: 2px;
 }
 
@@ -68,7 +68,7 @@ body {
 }
 
 #not-busy-container > div,
-#busy-container > div {
+#message-container > div {
   padding: 0px 10px;
 }
 

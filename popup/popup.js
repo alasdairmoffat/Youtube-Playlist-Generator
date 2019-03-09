@@ -50,8 +50,6 @@ window.onload = () => {
       type: 'addToPlaylist',
       body: { playlistId },
     });
-    // Add button to open playlist on completion?
-    // https://www.youtube.com/playlist?list=${playlistId}&disable_polymer=true
   }
 
   port.onMessage.addListener((msg) => {

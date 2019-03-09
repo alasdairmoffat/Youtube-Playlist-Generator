@@ -33,8 +33,7 @@
           <div id="sign-out-button" class="hide">
             <div class="valign-wrapper pointer hover-highlight">
               <i class="material-icons grey-text col s2">exit_to_app</i>
-              <span class="col s8">Sign Out</span>
-              <span class="col s2">&nbsp;</span>
+              <span class="col s10">Sign Out</span>
             </div>
           </div>
         </div>
@@ -77,8 +76,7 @@
           <div class="row">
             <div class="valign-wrapper pointer hover-highlight">
               <i class="material-icons grey-text col s2">playlist_add</i>
-              <span class="col s8">Add To Playlist</span>
-              <span class="col s2">&nbsp;</span>
+              <span class="col s10">Add To Playlist</span>
             </div>
           </div>
         </div>
@@ -117,8 +115,7 @@
             <!-- Create New Playlist Button -->
             <div id="new-playlist-button" class="row valign-wrapper pointer">
               <i class="material-icons grey-text">add</i>
-              <span class="col s11">Create new playlist</span>
-              <span class="col s1">&nbsp;</span>
+              <span class="col s12">Create new playlist</span>
             </div>
 
             <!-- New Playlist Form -->
@@ -149,25 +146,17 @@
                 <button type="submit" class="btn-inline right">
                   CREATE
                 </button>
-
-                <!-- <div class="blue-text text-accent-4 pointer">
-                  <span class="col s8"></span>
-                  <span class="col s4">CREATE</span>
-                </div> -->
               </div>
             </form>
           </div>
         </div>
 
         <!-- Progress Bar -->
-        <div
-          id="busy-container"
-          class="container grey darken-4 hide"
-        >
+        <div id="message-container" class="container grey darken-4 hide">
           <hr />
           <div class="row"></div>
           <div class="row valign-wrapper">
-            <span id="progress-text" class="white-text col s7">&nbsp;</span>
+            <span id="progress-text" class="white-text col s7"></span>
             <button id="cancel-button" class="btn-cancel col s4">CANCEL</button>
           </div>
           <div class="row">
@@ -175,8 +164,13 @@
               <div class="progress grey lighten-2">
                 <div
                   id="progress-bar"
-                  class="determinate blue lighten-1"
+                  class="determinate blue lighten-1 hide"
                   style="width: 0%"
+                ></div>
+
+                <div
+                  id="waiting-bar"
+                  class="indeterminate blue lighten-1 hide"
                 ></div>
               </div>
             </div>
@@ -192,8 +186,7 @@
       <div class="row">
         <div id="back-button" class="valign-wrapper pointer hover-highlight">
           <i class="material-icons grey-text col s2">chevron_left</i>
-          <span class="col s8">Back</span>
-          <span class="col s2">&nbsp;</span>
+          <span class="col s10">Back</span>
         </div>
       </div>
 

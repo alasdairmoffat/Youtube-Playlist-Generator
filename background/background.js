@@ -45,27 +45,22 @@ class MessageHandler {
   }
 
   async sendChannelPlaylists(nextPageToken) {
-    let channelPlaylists;
-    if (nextPageToken) {
-      channelPlaylists = await this.youtube.getChannelPlaylists(nextPageToken);
-      this.sendMessage({
-        type: 'channelPlaylists',
-        body: {
-          channelPlaylists,
-          incomplete: true,
-        },
-      });
-    } else {
-      channelPlaylists = await this.youtube.getChannelPlaylists();
-      this.sendMessage({
-        type: 'channelPlaylists',
-        body: { channelPlaylists },
-      });
-    }
+    const channelPlaylists = nextPageToken
+      ? await this.youtube.getChannelPlaylists(nextPageToken)
+      : await this.youtube.getChannelPlaylists();
+
+    const body = { channelPlaylists };
+
     if (channelPlaylists.nextPageToken) {
+      console.log(channelPlaylists.nextPageToken);
       // sendChannelPlaylists(channelPlaylists.nextPageToken);
-      console.log(channelPlaylists.nextPageToken)
+      body.incomplete = true;
     }
+
+    this.sendMessage({
+      type: 'channelPlaylists',
+      body,
+    });
   }
 
   async addAllVideos(playlistId, videoIds) {
@@ -100,7 +95,7 @@ class MessageHandler {
     this.addAllVideos(playlistId, videoIds);
   }
 
-  async createPlaylist(title) {
+  async newPlaylist(title) {
     const data = await this.youtube.createPlaylist(title);
     const playlistId = data.id;
     const videoIds = [...this.youtube.videoIds];
@@ -144,7 +139,7 @@ class MessageHandler {
         break;
 
       case 'createPlaylist':
-        this.createPlaylist(msg.body.title);
+        this.newPlaylist(msg.body.title);
         break;
 
       case 'cancel':

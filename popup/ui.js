@@ -17,7 +17,7 @@ class UI {
     this.quickPlaylistsList = document.querySelector('#quick-playlists-list');
     this.channelPlaylists = document.querySelector('#channel-playlists');
     this.channelPlaylistsList = document.querySelector('#channel-playlists-list');
-    this.busyContainer = document.querySelector('#busy-container');
+    this.messageContainer = document.querySelector('#message-container');
     this.notbusyContainer = document.querySelector('#not-busy-container');
     this.playlistsContainer = document.querySelector('#playlists-container');
     this.signInProgress = document.querySelector('#sign-in-progress');
@@ -25,6 +25,7 @@ class UI {
     this.quickPlaylistsSpinner = document.querySelector('#quick-playlists-spinner');
     this.progressText = document.querySelector('#progress-text');
     this.progressBar = document.querySelector('#progress-bar');
+    this.waitingBar = document.querySelector('#waiting-bar');
 
     this.signInButton = document.querySelector('#sign-in-button');
     this.signOutButton = document.querySelector('#sign-out-button');
@@ -62,14 +63,14 @@ class UI {
           const playlistTitle = this.titleInput.value;
 
           if (playlistTitle.length === 0) {
-            this.inputWarning.innerText = 'Required';
+            this.inputWarning.textContent = 'Required';
             this.createNewPlaylistForm.classList.add('form-warning');
           } else if (/[<>]/.test(playlistTitle)) {
-            this.inputWarning.innerText = 'Playlist name cannot contain < or >';
+            this.inputWarning.textContent = 'Playlist name cannot contain < or >';
             this.createNewPlaylistForm.classList.add('form-warning');
           } else {
             buttonFunctions.createPlaylist(playlistTitle);
-            this.inputWarning.innerText = '';
+            this.inputWarning.textContent = '';
             this.createNewPlaylistForm.classList.remove('form-warning');
           }
         };
@@ -87,8 +88,8 @@ class UI {
     };
 
     this.backButton.onclick = () => {
-      UI.show(this.mainScreen);
       UI.hide(this.quickPlaylists);
+      UI.show(this.mainScreen);
     };
 
     this.newPlaylistButton.onclick = () => {
@@ -98,55 +99,57 @@ class UI {
 
     // text counter for input field
     this.titleInput.oninput = () => {
-      this.titleCount.innerText = this.titleInput.value.length;
+      this.titleCount.textContent = this.titleInput.value.length;
     };
   }
 
-  static show(element) {
-    element.classList.remove('hide');
+  static show(...args) {
+    args.forEach((element) => {
+      element.classList.remove('hide');
+    });
   }
 
-  static hide(element) {
-    element.classList.add('hide');
+  static hide(...args) {
+    args.forEach((element) => {
+      element.classList.add('hide');
+    });
   }
 
   updateStatus(status) {
     if (status) {
       if (status.isSignedIn) {
-        UI.hide(this.signInButton);
-        UI.show(this.signOutButton);
-        UI.hide(this.signInProgress);
-        UI.show(this.addToPlaylistButton);
+        UI.hide(this.signInButton, this.signInProgress);
+        UI.show(this.signOutButton, this.addToPlaylistButton);
       } else {
+        UI.hide(
+          this.signOutButton,
+          this.signInProgress,
+          this.addToPlaylistButton,
+          this.channelSpinner,
+          this.channelPlaylists,
+        );
         UI.show(this.signInButton);
-        UI.hide(this.signOutButton);
-        UI.hide(this.signInProgress);
-        UI.hide(this.addToPlaylistButton);
-        UI.hide(this.channelSpinner);
-        UI.hide(this.channelPlaylists);
       }
 
       if (status.busy) {
-        UI.show(this.busyContainer);
-        UI.hide(this.addToPlaylistButton);
-        UI.hide(this.notbusyContainer);
+        UI.hide(this.waitingBar, this.addToPlaylistButton, this.notbusyContainer);
+        UI.show(this.messageContainer, this.progressBar);
 
         const { current, total } = status.busy;
-        this.progressText.innerText = `Adding ${current} of ${total}`;
+        this.progressText.textContent = `Adding ${current} of ${total}`;
         const percentComplete = Math.round(((current - 1) / total) * 100);
         this.progressBar.style.width = `${percentComplete}%`;
       } else if (status.complete) {
         if (status.complete.cancelled) {
-          this.progressText.innerText = 'Cancelled';
+          this.progressText.textContent = 'Cancelled';
         } else {
-          this.progressText.innerText = 'All videos added';
+          this.progressText.textContent = 'All videos added';
           this.progressBar.style.width = '100%';
         }
-        UI.show(this.busyContainer);
-        UI.hide(this.addToPlaylistButton);
-        UI.hide(this.notbusyContainer);
+        UI.hide(this.waitingBar, this.addToPlaylistButton, this.notbusyContainer);
+        UI.show(this.messageContainer, this.progressBar);
       } else {
-        UI.hide(this.busyContainer);
+        UI.hide(this.messageContainer);
         UI.show(this.notbusyContainer);
       }
     }
@@ -154,15 +157,21 @@ class UI {
 
   updateVideoCount(numVideos) {
     if (numVideos === 0) {
-      this.numVideos.innerText = 'No videos found';
+      this.numVideos.textContent = 'No videos found';
       UI.hide(this.playlistsContainer);
     } else {
-      this.numVideos.innerText = `${numVideos} video${numVideos === 1 ? '' : 's'} found`;
+      this.numVideos.textContent = `${numVideos} video${numVideos === 1 ? '' : 's'} found`;
       UI.show(this.playlistsContainer);
     }
   }
 
-  static createChannelPlaylistElement(playlist, onclick) {
+  showDuplicateCheckMessage() {
+    UI.hide(this.progressBar, this.addToPlaylistButton, this.notbusyContainer);
+    UI.show(this.messageContainer, this.waitingBar);
+    this.progressText.textContent = 'Checking for duplicates';
+  }
+
+  createChannelPlaylistElement(playlist, onclick) {
     const { title, id, privacy } = playlist;
 
     const label = document.createElement('label');
@@ -174,24 +183,25 @@ class UI {
     checkbox.classList.add('filled-in', 'checkmark-blue', 'checkmark-align');
     checkbox.id = id;
     checkbox.onclick = (event) => {
+      this.showDuplicateCheckMessage();
       onclick(event.target.id);
     };
 
     const span = document.createElement('span');
     span.classList.add('grey-text', 'text-darken-4', 'truncate', 'col', 's10');
-    span.innerText = title;
+    span.textContent = title;
 
     const icon = document.createElement('i');
     icon.classList.add('material-icons', 'smaller', 'pointer', 'col', 's2');
     switch (privacy) {
       case 'private':
-        icon.innerText = 'lock';
+        icon.textContent = 'lock';
         break;
       case 'unlisted':
-        icon.innerText = 'lock_open';
+        icon.textContent = 'lock_open';
         break;
       case 'public':
-        icon.innerText = 'public';
+        icon.textContent = 'public';
         break;
       default:
     }
@@ -207,7 +217,7 @@ class UI {
 
   showChannelPlaylists(channelPlaylists, onclick) {
     channelPlaylists.forEach((playlist) => {
-      const playlistElement = UI.createChannelPlaylistElement(playlist, onclick);
+      const playlistElement = this.createChannelPlaylistElement(playlist, onclick);
       this.channelPlaylistsList.append(playlistElement);
     });
 
@@ -220,19 +230,15 @@ class UI {
 
     const icon = document.createElement('i');
     icon.classList.add('material-icons', 'grey-text', 'col', 's2');
-    icon.innerText = 'playlist_play';
+    icon.textContent = 'playlist_play';
 
     const textSpan = document.createElement('span');
-    textSpan.classList.add('col', 's8');
-    textSpan.innerText = `Videos ${index * 50 + 1} to ${index * 50 + length}`;
-
-    const spacingSpan = document.createElement('span');
-    spacingSpan.classList.add('col', 's2');
-    spacingSpan.innerText = '\xa0';
+    textSpan.classList.add('col', 's10');
+    textSpan.textContent = `Videos ${index * 50 + 1} to ${index * 50 + length}`;
 
     const row = document.createElement('div');
     row.classList.add('valign-wrapper', 'pointer', 'hover-highlight', 'row');
-    row.append(icon, textSpan, spacingSpan);
+    row.append(icon, textSpan);
     row.onclick = () => {
       chrome.tabs.create({ url, active: false });
     };
@@ -250,19 +256,15 @@ class UI {
     if (quickPlaylists.length > 1) {
       const icon = document.createElement('i');
       icon.classList.add('material-icons', 'grey-text', 'col', 's2');
-      icon.innerText = 'playlist_play';
+      icon.textContent = 'playlist_play';
 
       const textSpan = document.createElement('span');
-      textSpan.classList.add('col', 's8');
-      textSpan.innerText = 'Open All';
-
-      const spacingSpan = document.createElement('span');
-      spacingSpan.classList.add('col', 's2');
-      spacingSpan.innerText = '\xa0';
+      textSpan.classList.add('col', 's10');
+      textSpan.textContent = 'Open All';
 
       const row = document.createElement('div');
       row.classList.add('pointer', 'hover-highlight', 'row');
-      row.append(icon, textSpan, spacingSpan);
+      row.append(icon, textSpan);
       row.onclick = () => {
         quickPlaylists.forEach((playlist) => {
           const { url } = playlist;
