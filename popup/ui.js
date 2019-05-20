@@ -18,7 +18,9 @@ class UI {
     this.channelPlaylists = document.querySelector('#channel-playlists');
     this.channelPlaylistsList = document.querySelector('#channel-playlists-list');
     this.messageContainer = document.querySelector('#message-container');
-    this.notbusyContainer = document.querySelector('#not-busy-container');
+    this.errorContainer = document.querySelector('#error-container');
+    this.errorMessage = document.querySelector('#error-message');
+    this.fetchedPlaylistsContainer = document.querySelector('#fetched-playlists-container');
     this.playlistsContainer = document.querySelector('#playlists-container');
     this.signInProgress = document.querySelector('#sign-in-progress');
     this.channelSpinner = document.querySelector('#channel-spinner');
@@ -41,24 +43,24 @@ class UI {
 
     if (buttonFunctions) {
       if (buttonFunctions.login) {
-        this.signInButton.onclick = () => {
+        this.signInButton.addEventListener('click', () => {
           UI.hide(this.signInButton);
           UI.show(this.signInProgress);
           buttonFunctions.login();
-        };
+        });
       }
       if (buttonFunctions.logout) {
-        this.signOutButton.onclick = buttonFunctions.logout;
+        this.signOutButton.addEventListener('click', buttonFunctions.logout);
       }
       if (buttonFunctions.getChannelPlaylists) {
-        this.addToPlaylistButton.onclick = () => {
-          buttonFunctions.getChannelPlaylists();
+        this.addToPlaylistButton.addEventListener('click', () => {
           UI.hide(this.addToPlaylistButton);
           UI.show(this.channelSpinner);
-        };
+          buttonFunctions.getChannelPlaylists();
+        });
       }
       if (buttonFunctions.createPlaylist) {
-        this.createNewPlaylistForm.onsubmit = (event) => {
+        this.createNewPlaylistForm.addEventListener('submit', (event) => {
           event.preventDefault();
           const playlistTitle = this.titleInput.value;
 
@@ -73,34 +75,34 @@ class UI {
             this.inputWarning.textContent = '';
             this.createNewPlaylistForm.classList.remove('form-warning');
           }
-        };
+        });
       }
       if (buttonFunctions.cancel) {
-        this.cancelButton.onclick = () => {
+        this.cancelButton.addEventListener('click', () => {
           buttonFunctions.cancel();
-        };
+        });
       }
     }
 
-    this.quickPlaylistsButton.onclick = () => {
+    this.quickPlaylistsButton.addEventListener('click', () => {
       UI.hide(this.mainScreen);
       UI.show(this.quickPlaylists);
-    };
+    });
 
-    this.backButton.onclick = () => {
+    this.backButton.addEventListener('click', () => {
       UI.hide(this.quickPlaylists);
       UI.show(this.mainScreen);
-    };
+    });
 
-    this.newPlaylistButton.onclick = () => {
+    this.newPlaylistButton.addEventListener('click', () => {
       UI.hide(this.newPlaylistButton);
       UI.show(this.createNewPlaylistForm);
-    };
+    });
 
     // text counter for input field
-    this.titleInput.oninput = () => {
+    this.titleInput.addEventListener('input', () => {
       this.titleCount.textContent = this.titleInput.value.length;
-    };
+    });
   }
 
   static show(...args) {
@@ -115,42 +117,79 @@ class UI {
     });
   }
 
+  displayError(error) {
+    UI.hide(
+      this.addToPlaylistButton,
+      this.channelSpinner,
+      this.fetchedPlaylistsContainer,
+      this.messageContainer,
+    );
+
+    const { message } = error;
+    this.errorMessage.textContent = message;
+
+    UI.show(this.errorContainer);
+  }
+
+  displaySignedIn() {
+    UI.hide(this.signInButton, this.signInProgress);
+    UI.show(this.signOutButton, this.addToPlaylistButton);
+  }
+
+  displaySignedOut() {
+    UI.hide(
+      this.signOutButton,
+      this.signInProgress,
+      this.addToPlaylistButton,
+      this.channelSpinner,
+      this.channelPlaylists,
+    );
+    UI.show(this.signInButton);
+  }
+
+  displayBusy(busy) {
+    UI.hide(this.waitingBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+
+    const { current, total } = busy;
+    this.progressText.textContent = `Adding ${current} of ${total}`;
+    const percentComplete = Math.round(((current - 1) / total) * 100);
+    this.progressBar.style.width = `${percentComplete}%`;
+
+    UI.show(this.messageContainer, this.progressBar);
+  }
+
+  displayCompleted(complete) {
+    UI.hide(this.waitingBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+
+    if (complete.cancelled) {
+      this.progressText.textContent = 'Cancelled';
+    } else {
+      this.progressText.textContent = 'All videos added';
+      this.progressBar.style.width = '100%';
+    }
+
+    UI.show(this.messageContainer, this.progressBar);
+  }
+
+  displayNotBusy() {
+    UI.hide(this.messageContainer);
+    UI.show(this.fetchedPlaylistsContainer);
+  }
+
   updateStatus(status) {
     if (status) {
       if (status.isSignedIn) {
-        UI.hide(this.signInButton, this.signInProgress);
-        UI.show(this.signOutButton, this.addToPlaylistButton);
+        this.displaySignedIn();
       } else {
-        UI.hide(
-          this.signOutButton,
-          this.signInProgress,
-          this.addToPlaylistButton,
-          this.channelSpinner,
-          this.channelPlaylists,
-        );
-        UI.show(this.signInButton);
+        this.displaySignedOut();
       }
 
       if (status.busy) {
-        UI.hide(this.waitingBar, this.addToPlaylistButton, this.notbusyContainer);
-        UI.show(this.messageContainer, this.progressBar);
-
-        const { current, total } = status.busy;
-        this.progressText.textContent = `Adding ${current} of ${total}`;
-        const percentComplete = Math.round(((current - 1) / total) * 100);
-        this.progressBar.style.width = `${percentComplete}%`;
+        this.displayBusy(status.busy);
       } else if (status.complete) {
-        if (status.complete.cancelled) {
-          this.progressText.textContent = 'Cancelled';
-        } else {
-          this.progressText.textContent = 'All videos added';
-          this.progressBar.style.width = '100%';
-        }
-        UI.hide(this.waitingBar, this.addToPlaylistButton, this.notbusyContainer);
-        UI.show(this.messageContainer, this.progressBar);
+        this.displayCompleted(status.complete);
       } else {
-        UI.hide(this.messageContainer);
-        UI.show(this.notbusyContainer);
+        this.displayNotBusy();
       }
     }
   }
@@ -166,9 +205,11 @@ class UI {
   }
 
   showDuplicateCheckMessage() {
-    UI.hide(this.progressBar, this.addToPlaylistButton, this.notbusyContainer);
+    UI.hide(this.progressBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+
+    this.progressText.textContent = 'Checking playlist for duplicates';
+
     UI.show(this.messageContainer, this.waitingBar);
-    this.progressText.textContent = 'Checking for duplicates';
   }
 
   createChannelPlaylistElement(playlist, onclick) {
@@ -182,10 +223,10 @@ class UI {
     checkbox.type = 'checkbox';
     checkbox.classList.add('filled-in', 'checkmark-blue', 'checkmark-align');
     checkbox.id = id;
-    checkbox.onclick = (event) => {
+    checkbox.addEventListener('click', (event) => {
       this.showDuplicateCheckMessage();
       onclick(event.target.id);
-    };
+    });
 
     const span = document.createElement('span');
     span.classList.add('grey-text', 'text-darken-4', 'truncate', 'col', 's10');
@@ -215,11 +256,20 @@ class UI {
     return row;
   }
 
-  showChannelPlaylists(channelPlaylists, onclick) {
+  showChannelPlaylists(body, onclick) {
+    const { channelPlaylists, incomplete } = body;
+
+    const listSpinner = this.channelPlaylistsList.lastElementChild;
+    this.channelPlaylistsList.removeChild(listSpinner);
+
     channelPlaylists.forEach((playlist) => {
       const playlistElement = this.createChannelPlaylistElement(playlist, onclick);
       this.channelPlaylistsList.append(playlistElement);
     });
+
+    if (incomplete) {
+      this.channelPlaylistsList.append(listSpinner);
+    }
 
     UI.hide(this.channelSpinner);
     UI.show(this.channelPlaylists);
@@ -239,9 +289,9 @@ class UI {
     const row = document.createElement('div');
     row.classList.add('valign-wrapper', 'pointer', 'hover-highlight', 'row');
     row.append(icon, textSpan);
-    row.onclick = () => {
+    row.addEventListener('click', () => {
       chrome.tabs.create({ url, active: false });
-    };
+    });
 
     return row;
   }
@@ -265,12 +315,12 @@ class UI {
       const row = document.createElement('div');
       row.classList.add('pointer', 'hover-highlight', 'row');
       row.append(icon, textSpan);
-      row.onclick = () => {
+      row.addEventListener('click', () => {
         quickPlaylists.forEach((playlist) => {
           const { url } = playlist;
           chrome.tabs.create({ url, active: false });
         });
-      };
+      });
 
       this.quickPlaylistsList.prepend(row);
     }

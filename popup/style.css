@@ -29,7 +29,8 @@ body {
   margin-top: 5px;
 }
 
-#message-container {
+#message-container,
+#error-container {
   border-radius: 2px;
 }
 
@@ -67,9 +68,14 @@ body {
   color: #909090 !important;
 }
 
-#not-busy-container > div,
-#message-container > div {
+#fetched-playlists-container > div,
+#message-container > div,
+#error-contianer > div {
   padding: 0px 10px;
+}
+
+#error-message {
+  padding: 20px 0px;
 }
 
 #title-input {
@@ -98,7 +104,8 @@ body {
   background-color: transparent;
   color: #065fd4;
 }
-.btn-inline:hover, .btn-cancel:hover {
+.btn-inline:hover,
+.btn-cancel:hover {
   cursor: pointer;
   box-shadow: none;
 }

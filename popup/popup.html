@@ -104,13 +104,29 @@
 
         <!-- Channel Playlists -->
 
-        <div id="not-busy-container" class="container hide">
+        <div id="fetched-playlists-container" class="container hide">
           <hr />
           <!-- Playlists List -->
           <div id="channel-playlists" class="hide">
             <h6>Save to...</h6>
             <hr />
-            <div id="channel-playlists-list"></div>
+            <div id="channel-playlists-list">
+              <div class="center">
+                <div class="preloader-wrapper small active">
+                  <div class="spinner-layer spinner-blue-only">
+                    <div class="circle-clipper left">
+                      <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                      <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                      <div class="circle"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <hr />
             <!-- Create New Playlist Button -->
             <div id="new-playlist-button" class="row valign-wrapper pointer">
@@ -153,7 +169,6 @@
 
         <!-- Progress Bar -->
         <div id="message-container" class="container grey darken-4 hide">
-          <hr />
           <div class="row"></div>
           <div class="row valign-wrapper">
             <span id="progress-text" class="white-text col s7"></span>
@@ -175,6 +190,11 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div id="error-container" class="container grey darken-4 hide">
+        <div class="row valign-wrapper">
+          <span id="error-message" class="white-text col s11"></span>
         </div>
       </div>
     </div>

@@ -81,17 +81,14 @@ class Youtube {
       request.body = JSON.stringify(request.body);
     }
 
-    try {
-      const response = await fetch(url, request);
-      const data = await response.json();
-      if (!response.ok) {
-        throw data.error;
-      }
-      return data;
-    } catch (error) {
-      console.log(`Error code: ${error.code}`);
-      console.log(`Message: ${error.message}`);
+    const response = await fetch(url, request);
+    const data = await response.json();
+    if (!response.ok) {
+      console.log(`Error code: ${data.error.code}`);
+      console.log(`Message: ${data.error.message}`);
+      throw data.error;
     }
+    return data;
   }
 
   // pageToken is optional parameter
@@ -110,14 +107,9 @@ class Youtube {
     };
     console.log('Fetching playlists');
     const data = await this.sendApiRequest(resource, params, options);
-    console.log(data);
     console.log('Playlists Received');
-    const playlists = data.items.map(playlist => ({
-      title: playlist.snippet.title,
-      id: playlist.id,
-      privacy: playlist.status.privacyStatus,
-    }));
-    return playlists;
+
+    return data;
   }
 
   async createPlaylist(title) {
@@ -135,11 +127,14 @@ class Youtube {
     };
     console.log('Creating Playlist');
     const data = await this.sendApiRequest(resource, params, options);
-    const playlistTitle = data.snippet.title;
-    const playlistId = data.id;
-    console.log(`Created playlist:
+
+    if (data.snippet && data.snippet.title && data.id) {
+      const playlistTitle = data.snippet.title;
+      const playlistId = data.id;
+      console.log(`Created playlist:
       title: ${playlistTitle},
       id: ${playlistId}`);
+    }
 
     return data;
   }
@@ -182,35 +177,52 @@ class Youtube {
     return this.sendApiRequest(resource, params, options);
   }
 
-  // async avoidDuplicateVideos(playlistId, videoIds) {
-  //   const data = await this.getPlaylistItems(playlistId);
+  // async avoidDuplicateVideos(playlistId, videoIds, pageToken) {
+  // will send null if pageToken not given
+  //   const data = await this.getPlaylistItems(playlistId, pageToken);
 
   //   const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
 
-  //   return videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+  //   let filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+
+  //   console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
+
+  //   if (data.nextPageToken) {
+  //     filteredVideoIds = this.avoidDuplicateVideos(
+  //       playlistId,
+  //       filteredVideoIds,
+  //       data.nextPageToken,
+  //     );
+  //   }
+
+  //   console.log(`${filteredVideoIds.length} videos remaining.`);
+
+  //   return filteredVideoIds;
   // }
 
-  async avoidDuplicateVideos(playlistId, videoIds, pageToken) {
-    let data;
-    if (pageToken) {
-      data = await this.getPlaylistItems(playlistId, pageToken);
-    } else {
-      data = await this.getPlaylistItems(playlistId);
-    }
+  async avoidDuplicateVideos(playlistId, videoIds) {
+    const data = await this.getPlaylistItems(playlistId);
 
     const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
 
-    let filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+    let pageToken = data.nextPageToken ? data.nextPageToken : null;
+
+    while (pageToken) {
+      // eslint-disable-next-line no-await-in-loop
+      const nextPage = await this.getPlaylistItems(playlistId, pageToken);
+
+      nextPage.items.forEach((item) => {
+        playlistVideoIds.push(item.snippet.resourceId.videoId);
+      });
+
+      pageToken = nextPage.nextPageToken ? nextPage.nextPageToken : null;
+    }
+
+    const filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
 
     console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
 
-    if (data.nextPageToken) {
-      filteredVideoIds = this.avoidDuplicateVideos(
-        playlistId,
-        filteredVideoIds,
-        data.nextPageToken,
-      );
-    }
+    console.log(`${filteredVideoIds.length} videos remaining.`);
 
     return filteredVideoIds;
   }
@@ -228,11 +240,14 @@ class Youtube {
     const requestUrls = playlistVideoIds.reduce((result, element) => {
       const videoIdList = element.join(',');
       const { length } = element;
-      result.push({
-        url: `https://www.youtube.com/watch_videos?video_ids=${videoIdList}`,
-        length,
-      });
-      return result;
+
+      return [
+        ...result,
+        {
+          url: `https://www.youtube.com/watch_videos?video_ids=${videoIdList}`,
+          length,
+        },
+      ];
     }, []);
 
     const re = /"playlistId":"((?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,})"/;
@@ -249,7 +264,7 @@ class Youtube {
         return playlist;
       }),
     );
-    // returns a promise
+
     return quickPlaylists;
   }
 }

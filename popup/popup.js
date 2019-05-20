@@ -53,8 +53,11 @@ window.onload = () => {
   }
 
   port.onMessage.addListener((msg) => {
-    console.log(msg);
     switch (msg.type) {
+      case 'error':
+        ui.displayError(msg.body);
+        break;
+
       case 'status':
         ui.updateStatus(msg.body);
         break;
@@ -64,7 +67,7 @@ window.onload = () => {
         break;
 
       case 'channelPlaylists':
-        ui.showChannelPlaylists(msg.body.channelPlaylists, addToPlaylist);
+        ui.showChannelPlaylists(msg.body, addToPlaylist);
         break;
 
       default:

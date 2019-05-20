@@ -12,13 +12,22 @@
   // eslint-disable-next-line no-useless-escape
   const re = /(?:[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])|(?:\/watch\?v=))(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
 
-  // create Array with all requested types maintaining page order
-  const allLinks = [].slice.apply(document.querySelectorAll('a, iframe, embed, object'));
+  // All the attributes returned from getBoundingClientRect()
+  const boundingRectAttributes = ['x', 'y', 'width', 'height', 'top', 'bottom', 'left', 'right'];
 
-  const videoIds = allLinks.reduce((result, element) => {
-    const extract = element[linkProperty[element.localName]].match(re);
-    if (!!extract && extract[1]) {
-      result.push(extract[1]);
+  // create Array with all requested types maintaining page order
+  const allLinks = Array.from(document.querySelectorAll('a, iframe, embed, object'));
+
+  const videoIds = allLinks.reduce((result, link) => {
+    // Remove any links where their bounding rect is all 0s
+    // (Sorts issue with youtube search pages containing links that are not displayed)
+    const boundingRect = link.getBoundingClientRect();
+    if (boundingRectAttributes.some(key => boundingRect[key] !== 0)) {
+      // then check for video Id
+      const extract = link[linkProperty[link.localName]].match(re);
+      if (!!extract && extract[1]) {
+        result.push(extract[1]);
+      }
     }
     return result;
   }, []);
