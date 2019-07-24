@@ -91,6 +91,21 @@ class Youtube {
     return data;
   }
 
+  async getChannelName() {
+    const resource = 'channels';
+    const params = {
+      part: 'snippet, contentDetails, contentOwnerDetails, id',
+      mine: 'true',
+    };
+    const options = {
+      method: 'GET',
+    };
+    const data = await this.sendApiRequest(resource, params, options);
+    console.log(data);
+    const channelName = data.items[0].snippet.title;
+    return channelName;
+  }
+
   // pageToken is optional parameter
   async getChannelPlaylists(pageToken) {
     const resource = 'playlists';

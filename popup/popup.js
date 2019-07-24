@@ -1,5 +1,5 @@
 window.onload = () => {
-  const port = chrome.extension.connect({ name: 'youtubePlaylistGenerator' });
+  const port = chrome.runtime.connect({ name: 'youtubePlaylistGenerator' });
 
   function login() {
     port.postMessage({
@@ -74,7 +74,7 @@ window.onload = () => {
     }
   });
 
-  chrome.tabs.executeScript({ file: './extractor.js', allFrames: true }, (returnArray) => {
+  chrome.tabs.executeScript({ file: '/extractor.js', allFrames: true }, (returnArray) => {
     const videoIds = returnArray ? Array.from(new Set(returnArray.flat())) : [];
 
     ui.updateVideoCount(videoIds.length);

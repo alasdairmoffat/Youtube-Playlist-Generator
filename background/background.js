@@ -5,7 +5,7 @@ const youtube = new Youtube(apiKey);
 // eslint-disable-next-line no-undef
 const messageHandler = new MessageHandler(youtube);
 
-chrome.extension.onConnect.addListener((port) => {
+chrome.runtime.onConnect.addListener((port) => {
   messageHandler.updatePort(port);
 });
 // });

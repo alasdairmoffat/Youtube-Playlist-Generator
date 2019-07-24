@@ -11,7 +11,7 @@ class MessageHandler {
     });
     this.sendStatus();
     this.port.onMessage.addListener(this.messageListener.bind(this));
-    chrome.extension.onMessage.addListener(this.receiveVideoIds.bind(this));
+    chrome.runtime.onMessage.addListener(this.receiveVideoIds.bind(this));
   }
 
   sendMessage(msg) {
