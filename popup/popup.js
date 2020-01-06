@@ -1,3 +1,5 @@
+/* global UI */
+
 window.onload = () => {
   const port = chrome.runtime.connect({ name: 'youtubePlaylistGenerator' });
 
@@ -42,7 +44,6 @@ window.onload = () => {
     cancel,
   };
 
-  // eslint-disable-next-line no-undef
   const ui = new UI(buttonFunctions);
 
   function addToPlaylist(playlistId) {

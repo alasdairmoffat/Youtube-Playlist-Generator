@@ -1,3 +1,6 @@
+/* global Youtube */
+/* eslint-disable no-console */
+/* eslint-disable-next-line no-unused-vars */
 class MessageHandler {
   constructor(youtube) {
     this.port = null;
@@ -83,50 +86,19 @@ class MessageHandler {
     }
   }
 
-  // async addAllVideos(playlistId, videoIds) {
-  //   this.youtube.cancel = false;
-  //   const numVideos = videoIds.length;
-
-  //   for (let i = 0; i < numVideos; i += 1) {
-  //     if (this.youtube.cancel) {
-  //       this.youtube.cancel = false;
-  //       this.youtube.setBusy(false);
-  //       this.sendStatus({ cancelled: true });
-  //       console.log('Process cancelled.');
-  //       return;
-  //     }
-  //     this.youtube.setBusy({ current: i + 1, total: numVideos });
-  //     this.sendStatus();
-  //     console.log(`Adding video ${i + 1} of ${numVideos}.`);
-
-  //     try {
-  //       // eslint-disable-next-line no-await-in-loop
-  //       await this.youtube.addVideo(playlistId, videoIds[i]);
-  //     } catch (error) {
-  //       if (error.message !== 'Video not found.') {
-  //         throw error;
-  //       }
-  //       // Do nothing further with 'Video not found.' error so as to not interrupt process.
-  //     }
-  //   }
-
-  //   this.youtube.setBusy(false);
-  //   this.sendStatus({ cancelled: false });
-  //   console.log(`All videos added to ${playlistId}.`);
-  // }
-
   async addAllVideos(playlistId, videoIds) {
     this.youtube.cancel = false;
-    const numVideo = videoIds.length;
+    const numVideos = videoIds.length;
 
     await videoIds.reduce(async (prev, current, i) => {
+      // videos must be added sequentially, so previous request must complete befor continuing
       await prev;
 
       if (this.youtube.cancel) return null;
 
       this.youtube.setBusy({ current: i + 1, total: numVideos });
       this.sendStatus();
-      console.log(`Adding video ${i + 1} of ${numVIdeos}.`);
+      console.log(`Adding video ${i + 1} of ${numVideos}.`);
 
       try {
         return await this.youtube.addVideo(playlistId, current);
@@ -140,7 +112,11 @@ class MessageHandler {
     this.youtube.setBusy(false);
     this.sendStatus({ cancelled: this.youtube.cancel });
 
-    console.log(this.youtube.cancel ? 'Process cancelled.' : `All videos added to ${playlistId}.`);
+    console.log(
+      this.youtube.cancel
+        ? 'Process cancelled.'
+        : `All videos added to ${playlistId}.`,
+    );
 
     this.youtube.cancel = false;
   }
@@ -148,7 +124,10 @@ class MessageHandler {
   async addToChannelPlaylist(playlistId) {
     const allVideoIds = [...this.youtube.videoIds];
     try {
-      const videoIds = await this.youtube.avoidDuplicateVideos(playlistId, allVideoIds);
+      const videoIds = await this.youtube.avoidDuplicateVideos(
+        playlistId,
+        allVideoIds,
+      );
 
       this.addAllVideos(playlistId, videoIds);
     } catch (error) {
@@ -173,7 +152,6 @@ class MessageHandler {
     if (videoIds.length > 0) {
       try {
         this.youtube.videoIds = videoIds;
-        // eslint-disable-next-line no-undef
         const quickPlaylists = await Youtube.createQuickPlaylists(videoIds);
         this.sendMessage({
           type: 'quickPlaylists',

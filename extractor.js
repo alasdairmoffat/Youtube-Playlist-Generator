@@ -8,9 +8,9 @@
     embed: 'src',
   };
 
-  // added extra element to RegEx for search results on youtube.com
+  // matches youtube video links of all formats and extracts video Ids
   // eslint-disable-next-line no-useless-escape
-  const re = /(?:[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])|(?:\/watch\?v=))(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
+  const re = /(?:[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?!user|redirect)\S*?[^\w\s-])|(?:\/watch\?v=))(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
 
   // All the attributes returned from getBoundingClientRect()
   const boundingRectAttributes = ['x', 'y', 'width', 'height', 'top', 'bottom', 'left', 'right'];

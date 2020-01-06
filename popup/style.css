@@ -55,6 +55,10 @@ body {
   margin-bottom: 10px;
 }
 
+.mt10 {
+  margin-top: 10px;
+}
+
 #sign-in-button,
 .hover-highlight {
   padding: 10px;

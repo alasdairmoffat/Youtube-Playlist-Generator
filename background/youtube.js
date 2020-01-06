@@ -1,8 +1,8 @@
-// eslint-disable-next-line no-unused-vars
+/* eslint-disable no-console */
+/* eslint-disable-next-line no-unused-vars */
 class Youtube {
   constructor(apiKey) {
     this.apiKey = apiKey;
-    // should this be stored or just requested each time?
     this.token = null;
     // this.busy is either false or {current: number, total: number}
     this.busy = false;
@@ -42,7 +42,6 @@ class Youtube {
     });
   }
 
-  // should this just reference this.token rather than calling chrome.identity?
   logout() {
     return new Promise((resolve) => {
       chrome.identity.getAuthToken({ interactive: false }, (token) => {
@@ -62,9 +61,10 @@ class Youtube {
       const param = params[x].replace(/,/g, '%2C');
       return `${x}=${param}&`;
     });
-    return `https://www.googleapis.com/youtube/v3/${resource}?${paramArr.join('')}key=${
-      this.apiKey
-    }`;
+
+    const paramString = paramArr.join('');
+
+    return `https://www.googleapis.com/youtube/v3/${resource}?${paramString}key=${this.apiKey}`;
   }
 
   async sendApiRequest(resource, params, options) {
@@ -192,33 +192,12 @@ class Youtube {
     return this.sendApiRequest(resource, params, options);
   }
 
-  // async avoidDuplicateVideos(playlistId, videoIds, pageToken) {
-  // will send null if pageToken not given
-  //   const data = await this.getPlaylistItems(playlistId, pageToken);
-
-  //   const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
-
-  //   let filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
-
-  //   console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
-
-  //   if (data.nextPageToken) {
-  //     filteredVideoIds = this.avoidDuplicateVideos(
-  //       playlistId,
-  //       filteredVideoIds,
-  //       data.nextPageToken,
-  //     );
-  //   }
-
-  //   console.log(`${filteredVideoIds.length} videos remaining.`);
-
-  //   return filteredVideoIds;
-  // }
-
   async avoidDuplicateVideos(playlistId, videoIds) {
     const data = await this.getPlaylistItems(playlistId);
 
-    const playlistVideoIds = data.items.map(item => item.snippet.resourceId.videoId);
+    const playlistVideoIds = data.items.map(
+      item => item.snippet.resourceId.videoId,
+    );
 
     let pageToken = data.nextPageToken ? data.nextPageToken : null;
 
@@ -233,7 +212,9 @@ class Youtube {
       pageToken = nextPage.nextPageToken ? nextPage.nextPageToken : null;
     }
 
-    const filteredVideoIds = videoIds.filter(videoId => !playlistVideoIds.includes(videoId));
+    const filteredVideoIds = videoIds.filter(
+      videoId => !playlistVideoIds.includes(videoId),
+    );
 
     console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
 
@@ -252,18 +233,15 @@ class Youtube {
       (x, i) => videoIds.slice(i * maxPlaylistLength, (i + 1) * maxPlaylistLength),
     );
 
-    const requestUrls = playlistVideoIds.reduce((result, element) => {
+    const requestUrls = playlistVideoIds.map((element) => {
       const videoIdList = element.join(',');
       const { length } = element;
 
-      return [
-        ...result,
-        {
-          url: `https://www.youtube.com/watch_videos?video_ids=${videoIdList}`,
-          length,
-        },
-      ];
-    }, []);
+      return {
+        url: `https://www.youtube.com/watch_videos?video_ids=${videoIdList}`,
+        length,
+      };
+    });
 
     const re = /"playlistId":"((?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,})"/;
     const quickPlaylists = await Promise.all(
@@ -272,10 +250,12 @@ class Youtube {
         const text = await response.text();
         const playlistId = text.match(re)[1];
         const { length } = request;
+
         const playlist = {
           url: `https://www.youtube.com/playlist?list=${playlistId}&disable_polymer=true`,
           length,
         };
+
         return playlist;
       }),
     );
