@@ -16,26 +16,38 @@ class UI {
     this.quickPlaylists = document.querySelector('#quick-playlists');
     this.quickPlaylistsList = document.querySelector('#quick-playlists-list');
     this.channelPlaylists = document.querySelector('#channel-playlists');
-    this.channelPlaylistsList = document.querySelector('#channel-playlists-list');
+    this.channelPlaylistsList = document.querySelector(
+      '#channel-playlists-list',
+    );
     this.messageContainer = document.querySelector('#message-container');
     this.errorContainer = document.querySelector('#error-container');
     this.errorMessage = document.querySelector('#error-message');
-    this.fetchedPlaylistsContainer = document.querySelector('#fetched-playlists-container');
+    this.fetchedPlaylistsContainer = document.querySelector(
+      '#fetched-playlists-container',
+    );
     this.playlistsContainer = document.querySelector('#playlists-container');
     this.signInProgress = document.querySelector('#sign-in-progress');
     this.channelSpinner = document.querySelector('#channel-spinner');
-    this.quickPlaylistsSpinner = document.querySelector('#quick-playlists-spinner');
+    this.quickPlaylistsSpinner = document.querySelector(
+      '#quick-playlists-spinner',
+    );
     this.progressText = document.querySelector('#progress-text');
     this.progressBar = document.querySelector('#progress-bar');
     this.waitingBar = document.querySelector('#waiting-bar');
 
     this.signInButton = document.querySelector('#sign-in-button');
     this.signOutButton = document.querySelector('#sign-out-button');
-    this.quickPlaylistsButton = document.querySelector('#quick-playlists-button');
+    this.quickPlaylistsButton = document.querySelector(
+      '#quick-playlists-button',
+    );
     this.backButton = document.querySelector('#back-button');
-    this.addToPlaylistButton = document.querySelector('#add-to-playlist-button');
+    this.addToPlaylistButton = document.querySelector(
+      '#add-to-playlist-button',
+    );
     this.newPlaylistButton = document.querySelector('#new-playlist-button');
-    this.createNewPlaylistForm = document.querySelector('#create-new-playlist-form');
+    this.createNewPlaylistForm = document.querySelector(
+      '#create-new-playlist-form',
+    );
     this.titleInput = document.querySelector('#title-input');
     this.titleCount = document.querySelector('#title-count');
     this.inputWarning = document.querySelector('#input-warning');
@@ -148,7 +160,11 @@ class UI {
   }
 
   displayBusy(busy) {
-    UI.hide(this.waitingBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+    UI.hide(
+      this.waitingBar,
+      this.addToPlaylistButton,
+      this.fetchedPlaylistsContainer,
+    );
 
     const { current, total } = busy;
     this.progressText.textContent = `Adding ${current} of ${total}`;
@@ -159,7 +175,11 @@ class UI {
   }
 
   displayCompleted(complete) {
-    UI.hide(this.waitingBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+    UI.hide(
+      this.waitingBar,
+      this.addToPlaylistButton,
+      this.fetchedPlaylistsContainer,
+    );
 
     if (complete.cancelled) {
       this.progressText.textContent = 'Cancelled';
@@ -199,59 +219,57 @@ class UI {
       this.numVideos.textContent = 'No videos found';
       UI.hide(this.playlistsContainer);
     } else {
-      this.numVideos.textContent = `${numVideos} video${numVideos === 1 ? '' : 's'} found`;
+      this.numVideos.textContent = `${numVideos} video${
+        numVideos === 1 ? '' : 's'
+      } found`;
       UI.show(this.playlistsContainer);
     }
   }
 
   showDuplicateCheckMessage() {
-    UI.hide(this.progressBar, this.addToPlaylistButton, this.fetchedPlaylistsContainer);
+    UI.hide(
+      this.progressBar,
+      this.addToPlaylistButton,
+      this.fetchedPlaylistsContainer,
+    );
 
     this.progressText.textContent = 'Checking playlist for duplicates';
 
     UI.show(this.messageContainer, this.waitingBar);
   }
 
+  static createDomElement(elementString) {
+    return new DOMParser().parseFromString(elementString, 'text/html').body
+      .firstChild;
+  }
+
   createChannelPlaylistElement(playlist, onclick) {
     const { title, id, privacy } = playlist;
 
-    const label = document.createElement('label');
-    label.classList.add('valign-wrapper');
-    label.setAttribute('for', id);
+    const checkbox = UI.createDomElement(
+      `<input type="checkbox" class="filled-in checkmark-blue checkmark-align" id=${id}></input>`,
+    );
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.classList.add('filled-in', 'checkmark-blue', 'checkmark-align');
-    checkbox.id = id;
     checkbox.addEventListener('click', (event) => {
       this.showDuplicateCheckMessage();
       onclick(event.target.id);
     });
 
-    const span = document.createElement('span');
-    span.classList.add('grey-text', 'text-darken-4', 'truncate', 'col', 's10');
-    span.textContent = title;
+    let iconTextContent = '';
+    if (privacy === 'private') iconTextContent = 'lock';
+    if (privacy === 'unlisted') iconTextContent = 'lock_open';
+    if (privacy === 'public') iconTextContent = 'public';
 
-    const icon = document.createElement('i');
-    icon.classList.add('material-icons', 'smaller', 'pointer', 'col', 's2');
-    switch (privacy) {
-      case 'private':
-        icon.textContent = 'lock';
-        break;
-      case 'unlisted':
-        icon.textContent = 'lock_open';
-        break;
-      case 'public':
-        icon.textContent = 'public';
-        break;
-      default:
-    }
+    const row = UI.createDomElement(
+      `<div class="row">
+        <label class="valign-wrapper" for=${id}>
+          <span class="grey-text text-darken-4 truncate col s10">${title}</span>
+          <i class="material-icons smaller pointer col s2">${iconTextContent}</i>
+        </label>
+      </div>`,
+    );
 
-    label.append(checkbox, span, icon);
-
-    const row = document.createElement('div');
-    row.classList.add('row');
-    row.append(label);
+    row.querySelector('label').prepend(checkbox);
 
     return row;
   }
@@ -262,8 +280,18 @@ class UI {
     const listSpinner = this.channelPlaylistsList.lastElementChild;
     this.channelPlaylistsList.removeChild(listSpinner);
 
+    // Add Watch later to beginning of channelPlaylists
+    channelPlaylists.unshift({
+      title: 'Watch later',
+      id: 'WL',
+      privacy: 'private',
+    });
+
     channelPlaylists.forEach((playlist) => {
-      const playlistElement = this.createChannelPlaylistElement(playlist, onclick);
+      const playlistElement = this.createChannelPlaylistElement(
+        playlist,
+        onclick,
+      );
       this.channelPlaylistsList.append(playlistElement);
     });
 
@@ -278,17 +306,14 @@ class UI {
   static createQuickPlaylistElement(playlist, index) {
     const { url, length } = playlist;
 
-    const icon = document.createElement('i');
-    icon.classList.add('material-icons', 'grey-text', 'col', 's2');
-    icon.textContent = 'playlist_play';
+    const row = UI.createDomElement(
+      `<div class="valign-wrapper pointer hover-highlight row">
+        <i class="material-icons grey-text col s2">playlist_play</i>
+        <span class="col s10">Videos ${index * 50 + 1} to ${index * 50
+        + length}</span>
+      </div>`,
+    );
 
-    const textSpan = document.createElement('span');
-    textSpan.classList.add('col', 's10');
-    textSpan.textContent = `Videos ${index * 50 + 1} to ${index * 50 + length}`;
-
-    const row = document.createElement('div');
-    row.classList.add('valign-wrapper', 'pointer', 'hover-highlight', 'row');
-    row.append(icon, textSpan);
     row.addEventListener('click', () => {
       chrome.tabs.create({ url, active: false });
     });
@@ -304,17 +329,13 @@ class UI {
     });
 
     if (quickPlaylists.length > 1) {
-      const icon = document.createElement('i');
-      icon.classList.add('material-icons', 'grey-text', 'col', 's2');
-      icon.textContent = 'playlist_play';
+      const row = UI.createDomElement(
+        `<div class="valign-wrapper pointer hover-highlight row">
+          <i class="material-icons grey-text col s2">playlist_play</i>
+          <span class="col s10">Open All (${quickPlaylists.length} tabs)</span>
+      </div>`,
+      );
 
-      const textSpan = document.createElement('span');
-      textSpan.classList.add('col', 's10');
-      textSpan.textContent = 'Open All';
-
-      const row = document.createElement('div');
-      row.classList.add('pointer', 'hover-highlight', 'row');
-      row.append(icon, textSpan);
       row.addEventListener('click', () => {
         quickPlaylists.forEach((playlist) => {
           const { url } = playlist;

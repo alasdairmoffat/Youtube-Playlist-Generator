@@ -81,20 +81,41 @@ class Youtube {
       request.body = JSON.stringify(request.body);
     }
 
-    const response = await fetch(url, request);
-    const data = await response.json();
-    if (!response.ok) {
-      console.log(`Error code: ${data.error.code}`);
-      console.log(`Message: ${data.error.message}`);
-      throw data.error;
+    try {
+      const response = await fetch(url, request);
+      const data = await response.json();
+      if (!response.ok) {
+        throw data.error;
+      }
+      return data;
+    } catch (err) {
+      console.log(err);
+
+      const messageRegExes = [
+        '^The request cannot be completed because you have exceeded your .+quota.+$',
+        '^Daily Limit Exceeded. The quota will be reset[\\s\\w()]+?\\.',
+        '^The user has created too many playlists recently. Please try the request again later.$',
+      ];
+
+      const re = new RegExp(`(${messageRegExes.join('|')})`);
+
+      const match = err.message.match(re);
+
+      if (match) {
+        // Strip any html from message
+        const message = match[0].replace(/<.+?>/g, '');
+
+        throw Error(message);
+      }
+
+      return null;
     }
-    return data;
   }
 
   async getChannelName() {
     const resource = 'channels';
     const params = {
-      part: 'snippet, contentDetails, contentOwnerDetails, id',
+      part: 'snippet',
       mine: 'true',
     };
     const options = {
@@ -193,14 +214,18 @@ class Youtube {
   }
 
   async avoidDuplicateVideos(playlistId, videoIds) {
+    // Request the current contents of the given playlist
     const data = await this.getPlaylistItems(playlistId);
 
+    // Create an array of the videoIds currently in the playlist
     const playlistVideoIds = data.items.map(
       item => item.snippet.resourceId.videoId,
     );
 
+    // Checks to see if there is another page of results (if playlist length > 50)
     let pageToken = data.nextPageToken ? data.nextPageToken : null;
 
+    // Continue requesting subsequent pages until all results are fetched
     while (pageToken) {
       // eslint-disable-next-line no-await-in-loop
       const nextPage = await this.getPlaylistItems(playlistId, pageToken);
@@ -212,11 +237,14 @@ class Youtube {
       pageToken = nextPage.nextPageToken ? nextPage.nextPageToken : null;
     }
 
+    // Create array from videoIds which are not already contained in playlist
     const filteredVideoIds = videoIds.filter(
       videoId => !playlistVideoIds.includes(videoId),
     );
 
-    console.log(`Removed ${videoIds.length - filteredVideoIds.length} videos.`);
+    console.log(
+      `Removed ${videoIds.length - filteredVideoIds.length} duplicate videos.`,
+    );
 
     console.log(`${filteredVideoIds.length} videos remaining.`);
 
@@ -247,6 +275,8 @@ class Youtube {
     const quickPlaylists = await Promise.all(
       requestUrls.map(async (request) => {
         const response = await fetch(request.url);
+        if (response.status !== 200) return undefined;
+
         const text = await response.text();
         const playlistId = text.match(re)[1];
         const { length } = request;

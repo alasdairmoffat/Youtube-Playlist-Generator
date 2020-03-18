@@ -30,11 +30,10 @@ class MessageHandler {
   }
 
   sendError(error) {
-    const { code, message } = error;
+    const { message } = error;
     this.sendMessage({
       type: 'error',
       body: {
-        code,
         message,
       },
     });
@@ -72,7 +71,6 @@ class MessageHandler {
       const body = { channelPlaylists };
 
       if (data.nextPageToken) {
-        // console.log(data.nextPageToken);
         this.sendChannelPlaylists(data.nextPageToken);
         body.incomplete = true;
       }
@@ -91,7 +89,7 @@ class MessageHandler {
     const numVideos = videoIds.length;
 
     await videoIds.reduce(async (prev, current, i) => {
-      // videos must be added sequentially, so previous request must complete befor continuing
+      // videos must be added sequentially, so previous request must complete before continuing
       await prev;
 
       if (this.youtube.cancel) return null;
@@ -103,9 +101,8 @@ class MessageHandler {
       try {
         return await this.youtube.addVideo(playlistId, current);
       } catch (error) {
-        // Do nothing further with 'Video not found.' error
-        if (error.message !== 'Video not found.') throw error;
-        return null;
+        this.youtube.cancel = true;
+        this.sendError(error);
       }
     }, Promise.resolve());
 
@@ -158,7 +155,7 @@ class MessageHandler {
           body: { quickPlaylists },
         });
       } catch (error) {
-        this.sendError(error);
+        console.log(error);
       }
     }
   }

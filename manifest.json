@@ -16,13 +16,20 @@
     "48": "./icons/48.png",
     "128": "./icons/128.png"
   },
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7arGsx3Ul4MeXyr/repn5nk7Q0yhFJUatvD4dsXKZYdxCqXrt1I/TSyZMo/xtbtFxKDog22OTaMNcmQK69oAcdBsBgqJ2NgQYu9+6NuMXmEsihyxheU+oWDrsgkNVakee/FFqGEjc+L7/wqmOYGzHUQ0cS2iroZqq1vuvnGw6n8SCFKeO5g6RhYdWALfqyxxBSSRn916QtIQEEhW9Djx8jGb/kd9pfVk840nRXJysoyDwSVsI5foBK32sbt/4S3LEdX/i97uYEb0IQrNj/Ymr0etuWTIE5VVQfaaAF7xQX2OZdZTHdbkR0+e4Pcp6rUxKARMg+YpsGe4pcdc9kVAsQIDAQAB",
+  "key": "",
   "manifest_version": 2,
   "name": "Youtube Playlist Generator",
   "oauth2": {
-    "client_id": "775857803253-43q8556aq71koiosgckifpumq5q3i7ac.apps.googleusercontent.com",
-    "scopes": ["https://www.googleapis.com/auth/youtube"]
+    "client_id": "",
+    "scopes": [
+      "https://www.googleapis.com/auth/youtube"
+    ]
   },
-  "permissions": ["activeTab", "tabs", "https://www.youtube.com/", "identity"],
-  "version": "0.0.9"
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "https://www.youtube.com/",
+    "identity"
+  ],
+  "version": "0.0.11"
 }
