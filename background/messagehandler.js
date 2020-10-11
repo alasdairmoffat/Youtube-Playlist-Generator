@@ -107,7 +107,7 @@ class MessageHandler {
     }, Promise.resolve());
 
     this.youtube.setBusy(false);
-    this.sendStatus({ cancelled: this.youtube.cancel });
+    this.sendStatus({ cancelled: this.youtube.cancel, playlistId });
 
     console.log(
       this.youtube.cancel

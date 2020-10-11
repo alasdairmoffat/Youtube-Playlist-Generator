@@ -52,6 +52,7 @@ class UI {
     this.titleCount = document.querySelector('#title-count');
     this.inputWarning = document.querySelector('#input-warning');
     this.cancelButton = document.querySelector('#cancel-button');
+    this.viewButton = document.querySelector('#view-button');
 
     if (buttonFunctions) {
       if (buttonFunctions.login) {
@@ -179,6 +180,7 @@ class UI {
       this.waitingBar,
       this.addToPlaylistButton,
       this.fetchedPlaylistsContainer,
+      this.cancelButton,
     );
 
     if (complete.cancelled) {
@@ -187,8 +189,12 @@ class UI {
       this.progressText.textContent = 'All videos added';
       this.progressBar.style.width = '100%';
     }
+    this.viewButton.addEventListener('click', () => {
+      const url = `https://youtube.com/playlist?list=${complete.playlistId}`;
+      chrome.tabs.create({ url });
+    });
 
-    UI.show(this.messageContainer, this.progressBar);
+    UI.show(this.messageContainer, this.progressBar, this.viewButton);
   }
 
   displayNotBusy() {
@@ -280,13 +286,6 @@ class UI {
     const listSpinner = this.channelPlaylistsList.lastElementChild;
     this.channelPlaylistsList.removeChild(listSpinner);
 
-    // Add Watch later to beginning of channelPlaylists
-    channelPlaylists.unshift({
-      title: 'Watch later',
-      id: 'WL',
-      privacy: 'private',
-    });
-
     channelPlaylists.forEach((playlist) => {
       const playlistElement = this.createChannelPlaylistElement(
         playlist,
@@ -309,8 +308,9 @@ class UI {
     const row = UI.createDomElement(
       `<div class="valign-wrapper pointer hover-highlight row">
         <i class="material-icons grey-text col s2">playlist_play</i>
-        <span class="col s10">Videos ${index * 50 + 1} to ${index * 50
-        + length}</span>
+        <span class="col s10">Videos ${index * 50 + 1} to ${
+  index * 50 + length
+}</span>
       </div>`,
     );
 

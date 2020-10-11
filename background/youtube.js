@@ -31,7 +31,11 @@ class Youtube {
     return new Promise((resolve) => {
       chrome.identity.getAuthToken({ interactive }, (token) => {
         if (chrome.runtime.lastError) {
-          console.log(chrome.runtime.lastError);
+          console.log(
+            'runtime error:',
+            chrome.runtime.lastError.message,
+            chrome.runtime.lastError,
+          );
           resolve();
         } else {
           this.token = token;
@@ -110,21 +114,6 @@ class Youtube {
 
       return null;
     }
-  }
-
-  async getChannelName() {
-    const resource = 'channels';
-    const params = {
-      part: 'snippet',
-      mine: 'true',
-    };
-    const options = {
-      method: 'GET',
-    };
-    const data = await this.sendApiRequest(resource, params, options);
-    console.log(data);
-    const channelName = data.items[0].snippet.title;
-    return channelName;
   }
 
   // pageToken is optional parameter
