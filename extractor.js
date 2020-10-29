@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 // contained in a block to allow variables to fall out of scope
 // this allows the script to function more than once per DOM load
 (function extractor() {
@@ -9,8 +10,35 @@
   };
 
   // matches youtube video links of all formats and extracts video Ids
-  // eslint-disable-next-line no-useless-escape
-  const re = /(?:[?=&+%\/:\w.-]*https?(?::\/\/|%3A%2F%2F)(?:[\w-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?!user|redirect|howyoutubeworks)\S*?[^\w\s-])|(?:\/watch\?v=))(?:3D)?([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:[''][^<>]*>|<\/a>))[?=&+%;\w.-]*/;
+  // prettier-ignore
+  const re = new RegExp(
+    '(?:'
+      + '[?=&+%\\/:\\w.-]*'
+      + 'https?' // Either http or https.
+      + '(?::\\/\\/|%3A%2F%2F)' // :// may be URL encoded.
+      + '(?:[\\w-]+\\.)?' // optional subdomain.
+      + '(?:' // Group host alternatives.
+      + 'youtu\\.be\\/' // Either youtu.be,
+      + '|youtube' // or youtube.com or
+      + '(?:-nocookie)?' // youtube-nocookie.com
+      + '\\.com\\/'
+      + '(?!user|c|redirect|howyoutubeworks)' // These paths can produce false positives,
+      + '\\S*?' // anything else is fine.
+      + '[^\\w\\s-])' // char before ID is non-ID char
+      + '|(?:\\/watch\\?v=)' // or may be internal youtube.com links
+      + ')' // End host alts.
+      + '(?:3D)?' // possible 3D param
+      + '([\\w-]{11})' // $1: videoID is exactly 11 chars
+      + '(?=[^\\w-]|$)' // Assert next char is non-ID or EOS
+      + '(?!' // Assert URL is not pre-linked
+      + '[?=&+%\\w.-]*' // Allow URL remainder
+      + '(?:' // Group pre-linked alternatives
+      + "[''][^<>]*>" // Either inside a start tag,
+      + '|<\\/a>' // or inside <a> element text contents
+      + ')' // End recognised pre-linked alts.
+      + ')' // End negative lookahead assertion.
+      + '[?=&+%;\\w.-]*', // Consume any URL (query) remainder.
+  );
 
   // All the attributes returned from getBoundingClientRect()
   const boundingRectAttributes = [

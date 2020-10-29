@@ -1,8 +1,6 @@
 {
   "background": {
     "scripts": [
-      "./background/youtube.js",
-      "./background/messagehandler.js",
       "./background/background.js"
     ]
   },
@@ -19,17 +17,10 @@
   "key": "",
   "manifest_version": 2,
   "name": "Youtube Playlist Generator",
-  "oauth2": {
-    "client_id": "",
-    "scopes": [
-      "https://www.googleapis.com/auth/youtube"
-    ]
-  },
   "permissions": [
     "activeTab",
     "tabs",
-    "https://www.youtube.com/",
-    "identity"
+    "https://www.youtube.com/"
   ],
-  "version": "0.0.12"
+  "version": "0.0.13"
 }

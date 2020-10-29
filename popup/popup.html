@@ -1,216 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Youtube Playlist Generator</title>
 
-    <script src="./ui.js"></script>
-    <script src="./popup.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Youtube Playlist Generator</title>
 
-    <!--Import Google Icon Font-->
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <!--Import materialize.css-->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
-    />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <!-- <div class="container"> -->
-    <div id="main-screen">
-      <!-- Login Buttons -->
-      <div id="sign-in-buttons">
-        <div class="row">
-          <div id="sign-in-button" class="hide">
-            <button class="btn-inline left">SIGN IN</button>
-          </div>
-          <div id="sign-out-button" class="hide mt10">
-            <div class="valign-wrapper pointer hover-highlight">
-              <i class="material-icons grey-text col s2">exit_to_app</i>
-              <span class="col s10">Sign Out</span>
-            </div>
-          </div>
-        </div>
-      </div>
+  <script src="./ui.js"></script>
+  <script src="./popup.js"></script>
 
-      <div id="sign-in-progress" class="row hide">
-        <div class="col s10 offset-s1 mt10">
-          <div class="progress grey lighten-2">
-            <div class="indeterminate blue lighten-1"></div>
-          </div>
-        </div>
-      </div>
+  <!--Import Google Icon Font-->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <!--Import materialize.css-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
 
-      <hr />
-
-      <!-- Video Count -->
-      <div class="row center">
-        <div id="num-videos"></div>
-      </div>
-
-      <div id="playlists-container">
-        <!-- Quick Playlists Button -->
-        <div class="row">
-          <div
-            id="quick-playlists-button"
-            class="valign-wrapper pointer hover-highlight"
-          >
-            <i class="material-icons grey-text col s2">playlist_play</i>
-            <span class="col s8 ">Quick Playlists</span>
-            <i class="material-icons grey-text col s2">chevron_right</i>
-          </div>
-        </div>
-
-        <!-- Add To Playlists Button -->
-        <div id="add-to-playlist-button">
-          <hr />
-          <div class="row">
-            <div class="valign-wrapper pointer hover-highlight">
-              <i class="material-icons grey-text col s2">playlist_add</i>
-              <span class="col s10">Add To Playlist</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Spinner -->
-        <div id="channel-spinner" class="row center hide">
-          <hr />
-          <div class="col s12 mt10">
-            <div class="preloader-wrapper active">
-              <div class="spinner-layer spinner-blue-only">
-                <div class="circle-clipper left">
-                  <div class="circle"></div>
-                </div>
-                <div class="gap-patch">
-                  <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                  <div class="circle"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Channel Playlists -->
-
-        <div id="fetched-playlists-container" class="container hide">
-          <hr />
-          <!-- Playlists List -->
-          <div id="channel-playlists" class="hide">
-            <h6>Save to...</h6>
-            <hr />
-            <div id="channel-playlists-list">
-              <div class="center">
-                <div class="preloader-wrapper small active">
-                  <div class="spinner-layer spinner-blue-only">
-                    <div class="circle-clipper left">
-                      <div class="circle"></div>
-                    </div>
-                    <div class="gap-patch">
-                      <div class="circle"></div>
-                    </div>
-                    <div class="circle-clipper right">
-                      <div class="circle"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <hr />
-            <!-- Create New Playlist Button -->
-            <div id="new-playlist-button" class="row valign-wrapper pointer">
-              <i class="material-icons grey-text">add</i>
-              <span class="col s12">Create new playlist</span>
-            </div>
-
-            <!-- New Playlist Form -->
-            <form
-              action=""
-              id="create-new-playlist-form"
-              class="hide"
-              autocomplete="off"
-            >
-              <div class="row">
-                <label for="title-input">Name</label>
-                <input
-                  id="title-input"
-                  type="text"
-                  maxLength="150"
-                  placeholder="Enter playlist name..."
-                />
-
-                <div class="input-message left">
-                  <span id="input-warning"></span>
-                </div>
-                <div class="input-message right">
-                  <span id="title-count">0</span>
-                  <span>/150</span>
-                </div>
-              </div>
-              <div class="row">
-                <button type="submit" class="btn-inline right">
-                  CREATE
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div id="message-container" class="container grey darken-4 hide">
-          <div class="row valign-wrapper mt10">
-            <span id="progress-text" class="white-text col s7"></span>
-            <button id="cancel-button" class="btn-inline btn-message-box col s4">CANCEL</button>
-            <button id="view-button" class="btn-inline btn-message-box col s4 hide">VIEW</button>
-          </div>
-          <div class="row">
-            <div class="col s12">
-              <div class="progress grey lighten-2">
-                <div
-                  id="progress-bar"
-                  class="determinate blue lighten-1 hide"
-                  style="width: 0%"
-                ></div>
-
-                <div
-                  id="waiting-bar"
-                  class="indeterminate blue lighten-1 hide"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="error-container" class="container grey darken-4 hide">
-        <div class="row valign-wrapper">
-          <span id="error-message" class="white-text col s11"></span>
-        </div>
-      </div>
+<body>
+  <div id="main-screen">
+    <!-- Video Count -->
+    <div class="row center">
+      <div id="num-videos"></div>
     </div>
 
+    <hr>
+
     <!-- Quick Playlists Page -->
-    <div id="quick-playlists" class="hide">
-      <!-- Back Button -->
-      <div class="row mt10">
-        <div id="back-button" class="valign-wrapper pointer hover-highlight">
-          <i class="material-icons grey-text col s2">chevron_left</i>
-          <span class="col s10">Back</span>
-        </div>
-      </div>
-
-      <hr />
-
+    <div id="quick-playlists">
       <!-- Quick Playlists List -->
       <div id="quick-playlists-list">
         <!-- Spinner -->
         <div id="quick-playlists-spinner" class="row center">
+          <div class="row">Fetching Playlists...</div>
           <div class="row center">
             <div class="preloader-wrapper active">
               <div class="spinner-layer spinner-blue-only">
@@ -228,7 +50,13 @@
           </div>
         </div>
       </div>
+      <!-- Error container -->
+      <div id="error-container" class="container grey darken-4 hide">
+        <div class="row valign-wrapper">
+          <span id="error-message" class="white-text col s11"></span>
+        </div>
+      </div>
     </div>
-    <!-- </div> -->
-  </body>
+</body>
+
 </html>
