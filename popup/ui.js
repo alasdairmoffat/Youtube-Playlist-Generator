@@ -55,7 +55,7 @@ class UI {
       return UI.createDomElement(
         `<div class="valign-wrapper p10 row">
           <i class="material-icons grey-text col s2">error_outline</i>
-          <span class="col s10">Error: Invalid Video</span>
+          <span class="col s10">Error: Invalid Video ID</span>
         </div>`,
       );
     }

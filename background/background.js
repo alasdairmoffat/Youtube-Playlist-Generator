@@ -60,7 +60,15 @@ class MessageHandler {
       };
     });
 
-    const re = /"playlistId":"((?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)[0-9A-Za-z-_]{10,})"/;
+    const re = new RegExp(
+      '^https:\\/\\/www.youtube.com\\/watch\\?v=' // Base url
+        + '(?:[\\w-]{11})' // Non-captured current Video ID
+        + '&list='
+        + '(' // Open capture group
+        + '(?:PL|LL|EC|UU|FL|RD|UL|TL|OLAK5uy_)' // Possible values for beginning of Playlist ID
+        + '[\\w-]{10,}' // Remainder of Playlist ID
+        + ')$', // End capture group
+    );
 
     this.controller = new AbortController();
     const { signal } = this.controller;
@@ -72,8 +80,7 @@ class MessageHandler {
           return { url: '', length: 0, request };
         }
 
-        const text = await response.text();
-        const playlistId = text.match(re)[1];
+        const playlistId = response.url.match(re)[1];
         const { length } = request;
 
         const playlist = {
@@ -84,6 +91,8 @@ class MessageHandler {
         return playlist;
       }),
     );
+
+    console.log(quickPlaylists);
 
     return quickPlaylists;
   }

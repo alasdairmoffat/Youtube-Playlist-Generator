@@ -34,7 +34,7 @@ window.onload = () => {
 
       // Catch errors
       const e = chrome.runtime.lastError;
-      if (e !== undefined) {
+      if (e) {
         console.log(`Runtime Error: ${e.message}`);
       }
     },
