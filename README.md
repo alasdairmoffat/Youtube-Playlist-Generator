@@ -1,5 +1,11 @@
 # Youtube Playlist Generator
 
+No longer functional.
+
+API login stopped functioning, and was stripped out. Quick Playlist functionality became of little value after youtube.com updates.
+
+Extracts all youtube video IDs from a webpage and either creates a playlist, or adds to a playlist belonging to the loggid in youtube account.
+
 ## Setup
 
 ### Required data
